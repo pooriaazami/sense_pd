@@ -1,10 +1,14 @@
 # Implementation Adapted from: https://github.com/TaatiTeam/MotionAGFormer
 
+import time
+import warnings
 from collections import OrderedDict
 
 import torch
 from torch import nn
 from models.DropPath import DropPath
+
+from torchprofile import profile_macs
 
 from modules.attention import Attention
 from modules.graph import GCN
@@ -287,8 +291,7 @@ class MotionAGFormer(nn.Module):
 
 
 def _test():
-    from torchprofile import profile_macs
-    import warnings
+    
     warnings.filterwarnings('ignore')
     b, c, t, j = 1, 3, 27, 17
     random_x = torch.randn((b, t, j, c)).to('cuda')
@@ -307,7 +310,6 @@ def _test():
     for _ in range(10):
         _ = model(random_x)
 
-    import time
     num_iterations = 100 
     # Measure the inference time for 'num_iterations' iterations
     start_time = time.time()
