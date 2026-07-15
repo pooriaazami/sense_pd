@@ -1,6 +1,9 @@
 # Implementation Adapted form: https://github.com/sherrywan/DPPD
 
+import os
 import copy
+import joblib
+
 import numpy as np
 
 def crop_scale_3d(motion, scale_range=[1, 1]):
@@ -40,3 +43,15 @@ def flip_data(data):
     flipped_data[..., 0] *= -1                                               # flip x of all joints
     flipped_data[..., left_joints+right_joints, :] = flipped_data[..., right_joints+left_joints, :]
     return flipped_data
+
+def read_pkl(data_url):
+    ext = os.path.splitext(data_url)[-1].lower()
+    if ext == '.pkl':
+        file = open(data_url,'rb')
+        content = joblib.load(file)
+        file.close()
+    elif ext == '.npy':
+        content = np.load(data_url, allow_pickle=False)
+    else:
+        raise ValueError(f"Unsupported file extension: {data_url}")
+    return content
