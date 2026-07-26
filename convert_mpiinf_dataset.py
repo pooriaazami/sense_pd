@@ -2,6 +2,7 @@
 
 import os
 import glob
+import pickle
 
 import torch
 
@@ -77,7 +78,8 @@ def convert(files):
         joints = convert_mat_to_h36m_joint(file, s, seq)
 
         destination = os.path.join(destination_root, s + '_' + seq)
-        np.save(destination, joints)
+        with open(destination, 'wb') as file:
+                    pickle.dump(joints, file)
         print('[DONE]')
 
 if __name__ == '__main__':
