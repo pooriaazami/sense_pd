@@ -1,3 +1,3 @@
-from lossses import *
-from config import *
-from smplx import *
+from .losses import *
+from .config import *
+from .smplx import *
