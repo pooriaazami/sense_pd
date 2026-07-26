@@ -79,7 +79,7 @@ def convert(files, smpl_model_path, regressor_path):
         print(f'[START]: {file}')
         joints = convert_pickle_to_h36m_joint(file, smpl_model, h36m_regressor).detach().cpu().numpy()
 
-        destination = os.path.join(destination_root, file.split('/')[-1])
+        destination = os.path.join(destination_root, file.split('/')[-1]).replace('.pkl', '')
         np.save(destination, joints)
         print('[DONE]')
 

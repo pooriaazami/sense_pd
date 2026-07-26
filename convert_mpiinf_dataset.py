@@ -50,7 +50,6 @@ def convert_mat_to_h36m_joint(mat_path, s, seq):
     data_3d = data['univ_annot3'][cam_set]
 
     dic_cam = {}
-    a  = len(data_3d)
     for cam_idx in range(len(data_3d)):
         data_3d_cam = data_3d[cam_idx][0]
 
@@ -60,7 +59,7 @@ def convert_mat_to_h36m_joint(mat_path, s, seq):
         data_3d_select[:, :, 1] *= -1
         data_3d_select = data_3d_select[joint_moves]
 
-        dic_data = {"data_3d":data_3d_select}
+        dic_data = {"data_3d": data_3d_select}
 
         dic_cam.update({str(cam_set[cam_idx]):dic_data})
 
