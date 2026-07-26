@@ -77,9 +77,11 @@ def convert(files):
         s, seq = x[2], x[3]
         joints = convert_mat_to_h36m_joint(file, s, seq)
 
-        destination = os.path.join(destination_root, s + '_' + seq)
+        destination = os.path.join(destination_root, s + '_' + seq + '.pkl')
+
         with open(destination, 'wb') as file:
                     pickle.dump(joints, file)
+
         print('[DONE]')
 
 if __name__ == '__main__':
