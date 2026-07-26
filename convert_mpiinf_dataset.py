@@ -59,7 +59,7 @@ def convert_mat_to_h36m_joint(mat_path, s, seq):
 
         data_3d_select = data_3d_cam[:frames, joint_set]
         data_3d_select[:, :, 1] *= -1
-        data_3d_select = data_3d_select[joint_moves]
+        data_3d_select = data_3d_select[:, joint_moves]
 
         dic_data = {"data_3d": data_3d_select}
 
