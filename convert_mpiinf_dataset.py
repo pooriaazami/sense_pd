@@ -48,6 +48,7 @@ def convert_mat_to_h36m_joint(mat_path, s, seq):
     for cam_idx in range(len(cameras)):
         assert cameras[cam_idx] == cam_idx
 
+    data_2d = data['annot2'][cam_set]
     data_3d = data['univ_annot3'][cam_set]
 
     dic_cam = {}
@@ -77,7 +78,7 @@ def convert(files):
         s, seq = x[2], x[3]
         joints = convert_mat_to_h36m_joint(file, s, seq)
 
-        destination = os.path.join(destination_root, s + '_' + seq + '.pkl')
+        destination = os.path.join(destination_root, s + '_' + seq)
         np.savez_compressed(destination, data=joints)
 
         print('[DONE]')
