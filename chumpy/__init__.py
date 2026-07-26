@@ -1,4 +1,4 @@
-# Cloned frm https://github.com/mattloper/chumpy
+# Cloned from https://github.com/mattloper/chumpy
 from .ch import *
 from .logic import *
 

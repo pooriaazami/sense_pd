@@ -73,10 +73,11 @@ def convert(files, smpl_model_path, regressor_path):
     smpl_model = SMPL(model_path=smpl_model_path, num_betas=10).to(DEVICE)
     destination_root = os.path.join('datasets', 'AIST', 'converted')
     regressor = np.load(regressor_path)
+    h36m_regressor = torch.tensor(regressor, dtype=torch.float32).to(DEVICE)
 
     for file in files:
         print(f'[START]: {file}')
-        joints = convert_pickle_to_h36m_joint(file, smpl_model, regressor).detach().cpu().numpy()
+        joints = convert_pickle_to_h36m_joint(file, smpl_model, h36m_regressor).detach().cpu().numpy()
 
         destination = os.path.join(destination_root, file.split('/')[-1])
         np.save(destination, joints)
