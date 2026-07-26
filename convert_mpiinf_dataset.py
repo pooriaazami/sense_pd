@@ -78,9 +78,7 @@ def convert(files):
         joints = convert_mat_to_h36m_joint(file, s, seq)
 
         destination = os.path.join(destination_root, s + '_' + seq + '.pkl')
-
-        with open(destination, 'wb') as file:
-                    pickle.dump(joints, file)
+        np.savez_compressed(destination, data=joints)
 
         print('[DONE]')
 
