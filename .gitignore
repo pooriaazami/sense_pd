@@ -221,6 +221,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-.pkl
-.pth
-.npy
+*.pkl
+*.pth
+*.npy
+datasets/*
