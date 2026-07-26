@@ -52,7 +52,7 @@ def convert_mat_to_h36m_joint(mat_path, s, seq):
     data_3d = data['univ_annot3'][cam_set]
 
     dic_cam = {}
-    for cam_idx in range(len(data_3d)):
+    for cam_idx in range(len(data_2d)):
         data_3d_cam = data_3d[cam_idx][0]
 
         data_3d_cam = data_3d_cam.reshape(data_3d_cam.shape[0], 28, 3)
