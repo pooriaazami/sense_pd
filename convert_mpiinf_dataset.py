@@ -66,7 +66,7 @@ def convert_mat_to_h36m_joint(mat_path, s, seq):
 
     dic_seq.update({s + ' ' + seq:[dic_cam, fps]})
 
-    return h36m_joints_world
+    return dic_seq
 
 def convert(files):
     destination_root = os.path.join('datasets', 'MPIINF', 'converted')
