@@ -75,10 +75,12 @@ def convert(files, smpl_model_path, regressor_path):
     regressor = np.load(regressor_path)
 
     for file in files:
+        print(f'[START]: {file}')
         joints = convert_pickle_to_h36m_joint(file, smpl_model, regressor).detach().cpu().numpy()
 
         destination = os.path.join(destination_root, file.split('/')[-1])
         np.save(destination, joints)
+        print('[DONE]')
 
 if __name__ == '__main__':
     convert(
