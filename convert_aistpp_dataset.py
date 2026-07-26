@@ -1,5 +1,6 @@
 import os
 import glob
+import pickle
 
 import torch
 
@@ -80,7 +81,10 @@ def convert(files, smpl_model_path, regressor_path):
         joints = convert_pickle_to_h36m_joint(file, smpl_model, h36m_regressor).detach().cpu().numpy()
 
         destination = os.path.join(destination_root, file.split('/')[-1]).replace('.pkl', '')
-        np.save(destination, joints)
+
+        with open(destination, 'wb') as file:
+            pickle.dump(joints, file)
+
         print('[DONE]')
 
 if __name__ == '__main__':
