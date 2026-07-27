@@ -97,9 +97,9 @@ def pretrain(
             optimizer,
             random_joint_mask_fn,
             random_frame_mask_fn,
-            epoch,
             device,
-            writer
+            writer,
+            epoch
         )
 
         print(f'Epoch {epoch} / {epochs}\n\ttotal_loss: {total_loss:.2f}, total_motion_loss: {total_motion_loss:.2f}, total_frames_loss: {total_frames_loss:.2f}')
