@@ -15,7 +15,7 @@ DATASET_ROOT = os.path.join('datasets', 'preprocessed')
 
 FPS = 25
 AIST_FPS = 60
-NUM_FRAMES = 243
+NUM_FRAMES = 81
 STRIDE = 20
 
 PATHS = [

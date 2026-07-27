@@ -23,13 +23,13 @@ model:
   temporal_connection_len: 1 # Only useful when use_tcn = False, use_temporal_similarity = False
   use_tcn: False
   graph_only: False
-  n_frames: 243
+  n_frames: 81
 
 dataset: datasets/preprocessed
 
 training:
   lr: 0.0004
-  batch_size: 4
+  batch_size: 8
   optimizer: adamw
   lambda_motion: 0.5
   joint_mask_ratio: 0.5
