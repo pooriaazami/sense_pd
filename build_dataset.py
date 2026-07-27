@@ -91,7 +91,7 @@ def convert_seq(seq, normalizer, fps, root):
     windows, masks = sliding_windows(mpi_data, NUM_FRAMES, STRIDE)
 
     for i, (window, mask) in enumerate(zip(windows, masks)):
-        print(f'\tCamera {i + 1}')
+        print(f'\tslice {i + 1}')
 
         windows = window.cpu().numpy()
         mask = mask.cpu().numpy()
@@ -126,7 +126,7 @@ def convert_aist_item(files, normalizer):
         print(f'[START]: {file_path}')
 
         with open(file_path, 'rb') as file:
-            aist_data = np.load(file, allow_pickle=True)['data'].item()
+            aist_data = np.load(file)['data'].item()
 
         aist_data = torch.from_numpy(aist_data)
         aist_data, fps = squeeze_dataset(aist_data)
