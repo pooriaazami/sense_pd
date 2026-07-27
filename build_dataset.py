@@ -126,7 +126,7 @@ def convert_aist_item(files, normalizer):
         print(f'[START]: {file_path}')
 
         with open(file_path, 'rb') as file:
-            aist_data = np.load(file)['data'].item()
+            aist_data = np.load(file)['data']
 
         aist_data = torch.from_numpy(aist_data)
         aist_data, fps = squeeze_dataset(aist_data)
