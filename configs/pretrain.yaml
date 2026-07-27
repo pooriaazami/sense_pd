@@ -35,4 +35,4 @@ training:
   joint_mask_ratio: 0.5
   frame_mask_ratio: 0.5
   epochs: 200
-  save_freq: 1
+  save_freq: 20
