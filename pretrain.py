@@ -130,7 +130,7 @@ def main(args):
     config = get_config(args.config)
 
     loss_fn = partial(pretext_loss, lambd=config.training.lambda_motion)
-    device = 'cuda' is torch.cuda.is_available() else 'cpu'
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     backbone = MotionAGFormer(**convert_params(config.model)).to(device)
     regressor = nn.Linear(
         in_features=config.model.dim_rep,
