@@ -37,8 +37,8 @@ def train_one_epoch(
 
     total_loss, total_motion_loss, total_frames_loss = [0] * 3
     for data, mask in dataloader:
-        data = data.to(device)
-        mask = mask.to(device)
+        data = data.float().to(device)
+        mask = mask.float().to(device)
 
         optimizer.zero_grad()
 
