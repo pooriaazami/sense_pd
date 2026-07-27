@@ -1,6 +1,8 @@
 experiment_name: 'Pretext_3D'
 
 model: 
+  n_layers: 16
+  dim_in: 3 
   dim_feat: 128
   dim_rep: 512
   dim_out: 3
