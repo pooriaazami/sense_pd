@@ -25,14 +25,13 @@ model:
   graph_only: False
   n_frames: 243
 
-dataset: datasets\preprocessed
+dataset: datasets/preprocessed
 
 training:
   lr: 0.0004
   batch_size: 8
   optimizer: adamw
   lambda_motion: 0.5
-  device: cuda
   joint_mask_ratio: 0.5
   frame_mask_ratio: 0.5
   epochs: 200
