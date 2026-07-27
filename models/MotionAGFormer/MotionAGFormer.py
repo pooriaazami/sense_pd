@@ -263,8 +263,6 @@ class MotionAGFormer(nn.Module):
             ('act', nn.Tanh())
         ]))
 
-        self.head = nn.Linear(dim_rep, dim_out)
-
     def forward(self, x, return_rep=False):
         """
         :param x: tensor with shape [B, T, J, C] (T=243, J=17, C=3)
@@ -278,10 +276,5 @@ class MotionAGFormer(nn.Module):
 
         x = self.norm(x)
         x = self.rep_logit(x)
-        if return_rep:
-            return x
-
-        x = self.head(x)
 
         return x
-
