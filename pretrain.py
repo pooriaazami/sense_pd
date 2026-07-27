@@ -43,14 +43,14 @@ def train_one_epoch(
         optimizer.zero_grad()
 
         # Joint Masked
-        data_joint_masked, _ = random_joint_mask_fn(data)
+        data_joint_masked = random_joint_mask_fn(data)
         joint_masked_embeddings = backbone(data_joint_masked)
         predicted_masked_joints = regressor(joint_masked_embeddings)
     
         total_loss_joint_masked, motion_loss_joint_masked, joints_loss_joint_masked = loss_fn(predicted_masked_joints, data, mask)
         
         # Frame Masked
-        data_frame_masked, _ = random_frame_mask_fn(data)
+        data_frame_masked = random_frame_mask_fn(data)
         frame_masked_embeddings = backbone(data_frame_masked)
         predicted_masked_frames = regressor(frame_masked_embeddings)
     
