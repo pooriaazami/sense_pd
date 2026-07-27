@@ -6,10 +6,10 @@ import torch
 from torch import nn
 from models.DropPath import DropPath
 
-from modules.attention import Attention
-from modules.graph import GCN
-from modules.mlp import MLP
-from modules.tcn import MultiScaleTCN
+from .modules.attention import Attention
+from .modules.graph import GCN
+from .modules.mlp import MLP
+from .modules.tcn import MultiScaleTCN
 
 
 class AGFormerBlock(nn.Module):
