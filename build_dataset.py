@@ -9,8 +9,8 @@ import numpy as np
 
 from data import Normalizer
 
-AIST = glob.glob(os.path.join('datasets', 'AIST', 'converted', '*.pkl'))
-MPIINF = glob.glob(os.path.join('datasets', 'MPIINF', 'converted', '*.pkl'))
+AIST = glob.glob(os.path.join('datasets', 'AIST', 'converted', '*.npz'))
+MPIINF = glob.glob(os.path.join('datasets', 'MPIINF', 'converted', '*.npz'))
 DATASET_ROOT = os.path.join('datasets', 'preprocessed')
 
 FPS = 25
@@ -136,9 +136,11 @@ def main():
     normalizer = Normalizer(PATHS)
 
     print('Processing MPI-INF')
+    print(MPIINF)
     convert_mpiinf_item(MPIINF, normalizer)
 
     print('Processing AIST++')
+    print(AIST)
     convert_aist_item(AIST, normalizer)
 
 if __name__ == '__main__':
