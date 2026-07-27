@@ -148,7 +148,7 @@ def main(args):
                             shuffle=True)
 
     random_joint_mask_fn = RandomJointMask(config.training.joint_mask_ratio)
-    random_frame_mask_fn = RandomFrameMask(config.training.frame_mask_ratio)
+    random_frame_mask_fn = RandomFrameMask(config.training.frame_mask_ratio, device=device)
 
     pretrain(
         backbone, 

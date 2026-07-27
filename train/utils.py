@@ -9,9 +9,10 @@ class RandomJointMask:
         return x * mask
 
 class RandomFrameMask:
-    def __init__(self, mask_ratio):
+    def __init__(self, mask_ratio, device):
         self.ratio = mask_ratio
+        self.device = device
 
     def __call__(self, x):
-        mask = (torch.rand(x.shape[0]) >= self.ratio).unsqueeze(1).unsqueeze(1)
-        return x * mask
+        mask = (torch.rand(x.shape[1]) >= self.ratio).unsqueeze(1).unsqueeze(1).unsqueeze(0).to(self.device)
+        return x * mask, mask
