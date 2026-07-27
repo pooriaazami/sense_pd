@@ -12,7 +12,7 @@ def motion_loss_fn(predicted_joints, ground_truth, mask):
     real_motion = real_joints[:, :-1, :, :] - real_joints[:, 1:, :, :]
     real_motion = torch.linalg.norm(real_motion, dim=1)
 
-    motion_loss = F.mse_loss(predicted_motion - real_motion)
+    motion_loss = F.mse_loss(predicted_motion, real_motion)
     
     return motion_loss
 
