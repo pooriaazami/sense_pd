@@ -37,7 +37,10 @@ def train_one_epoch(
         epoch
     ):
 
-    total_loss, total_motion_loss, total_frames_loss = [0] * 3
+    total_joint_masked_motion_loss, total_joint_masked_rec_loss, total_joint_masked_loss, \
+    total_frame_masked_motion_loss, total_frame_masked_rec_loss , total_frame_masked_loss, \
+    total_loss = [0] * 7
+
     for data, mask in tqdm(dataloader):
         data = data.float().to(device)
         mask = mask.float().to(device)
@@ -49,28 +52,40 @@ def train_one_epoch(
         joint_masked_embeddings = backbone(data_joint_masked)
         predicted_masked_joints = regressor(joint_masked_embeddings)
     
-        total_loss_joint_masked, motion_loss_joint_masked, joints_loss_joint_masked = loss_fn(predicted_masked_joints, data, mask)
+        total_loss_joint_masked, motion_loss_joint_masked, rec_loss_joint_masked = loss_fn(predicted_masked_joints, data, mask)
         
         # Frame Masked
         data_frame_masked = random_frame_mask_fn(data)
         frame_masked_embeddings = backbone(data_frame_masked)
         predicted_masked_frames = regressor(frame_masked_embeddings)
     
-        total_loss_frame_masked, motion_loss_frame_masked, joints_loss_frame_masked = loss_fn(predicted_masked_frames, data, mask)
+        total_loss_frame_masked, motion_loss_frame_masked, rec_loss_frame_masked = loss_fn(predicted_masked_frames, data, mask)
 
         loss = total_loss_joint_masked + total_loss_frame_masked
         loss.backward()
         optimizer.step()
 
-        total_loss += total_loss_joint_masked.detach().cpu().numpy().item() + total_loss_frame_masked.detach().cpu().numpy().item()
-        total_motion_loss += motion_loss_joint_masked.detach().cpu().numpy().item() + motion_loss_frame_masked.detach().cpu().numpy().item()
-        total_frames_loss += joints_loss_joint_masked.detach().cpu().numpy().item() + joints_loss_frame_masked.detach().cpu().numpy().item()
+        total_joint_masked_motion_loss += motion_loss_joint_masked.detach().cpu().numpy().item()
+        total_joint_masked_rec_loss += rec_loss_joint_masked.detach().cpu().numpy().item()
+        total_joint_masked_loss += total_loss_joint_masked.detach().cpu().numpy().item()
+
+        total_frame_masked_motion_loss = motion_loss_frame_masked.detach().cpu().numpy().item()
+        total_frame_masked_rec_loss = rec_loss_frame_masked.detach().cpu().numpy().item()
+        total_frame_masked_loss += total_loss_frame_masked.detach().cpu().numpy().item()
+
+        total_loss += loss.detach().cpu().numpy().item()
+        
+    writer.add_scalar('Loss/total_joint_masked_motion_loss', total_joint_masked_motion_loss, epoch)
+    writer.add_scalar('Loss/total_joint_masked_rec_loss', total_joint_masked_rec_loss, epoch)
+    writer.add_scalar('Loss/total_joint_masked_loss', total_joint_masked_loss, epoch)
+    
+    writer.add_scalar('Loss/total_frame_masked_motion_loss', total_frame_masked_motion_loss, epoch)
+    writer.add_scalar('Loss/total_frame_masked_rec_loss', total_frame_masked_rec_loss, epoch)
+    writer.add_scalar('Loss/total_frame_masked_loss', total_frame_masked_loss, epoch)
 
     writer.add_scalar('Loss/total_loss', total_loss, epoch)
-    writer.add_scalar('Loss/total_motion_loss', total_motion_loss, epoch)
-    writer.add_scalar('Loss/total_frames_loss', total_frames_loss, epoch)
 
-    return total_loss, total_motion_loss, total_frames_loss
+    return total_loss, total_joint_masked_loss, total_frame_masked_loss
 
 def pretrain(
         backbone, 
