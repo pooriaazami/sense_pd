@@ -116,6 +116,7 @@ def convert_mpiinf_item(files, normalizer):
         mpi_data, fps = squeeze_dataset(mpi_data)
 
         for dataset in mpi_data:
+            dataset = torch.from_numpy(dataset)
             convert_seq(dataset, normalizer, fps, file_path)
 
         print(f'[DONE]')
@@ -127,6 +128,7 @@ def convert_aist_item(files, normalizer):
         with open(file_path, 'rb') as file:
             aist_data = np.load(file, allow_pickle=True)['data'].item()
 
+        aist_data = torch.from_numpy(aist_data)
         aist_data, fps = squeeze_dataset(aist_data)
         convert_seq(aist_data, normalizer, fps, file_path)
 
