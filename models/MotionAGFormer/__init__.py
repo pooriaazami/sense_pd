@@ -1,1 +1,1 @@
-from MotionAGFormer import MotionAGFormer
+from .MotionAGFormer import MotionAGFormer
