@@ -29,7 +29,7 @@ dataset: datasets/preprocessed
 
 training:
   lr: 0.0004
-  batch_size: 8
+  batch_size: 4
   optimizer: adamw
   lambda_motion: 0.5
   joint_mask_ratio: 0.5

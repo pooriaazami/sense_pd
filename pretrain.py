@@ -135,7 +135,7 @@ def main(args):
     regressor = nn.Linear(
         in_features=config.model.dim_rep,
         out_features=3
-    )
+    ).to(device)
 
     optimizer = optim.AdamW(
         chain(backbone.parameters(), regressor.parameters()),
