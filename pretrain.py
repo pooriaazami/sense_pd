@@ -107,6 +107,15 @@ def pretrain(
         if epoch % save_freq == 0:
             torch.save(backbone.state_dict, os.path.join('assets', 'checkpoints', f'epoch_{epoch}.pth'))
 
+def convert_params(params):
+    act_mapper = {
+        "gelu": nn.GELU,
+        'relu': nn.ReLU
+    }
+
+    params.act_layer = act_mapper[params.act_layer]
+    return params
+
 def main(args):
     parser = argparse.ArgumentParser(description='This module trains the 3D encoder model.')
 
@@ -122,7 +131,7 @@ def main(args):
 
     loss_fn = partial(pretext_loss, lambd=config.training.lambda_motion)
     device = torch.device(config.training.device)
-    backbone = MotionAGFormer(**config.model).to(device)
+    backbone = MotionAGFormer(**convert_params(config.model)).to(device)
     regressor = nn.Linear(
         in_features=config.model.dim_rep,
         out_features=3
