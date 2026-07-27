@@ -11,6 +11,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
+from tqdm import tqdm
+
 from utils import get_config
 from models import MotionAGFormer
 from data import Motion3DDataset
@@ -36,7 +38,7 @@ def train_one_epoch(
     ):
 
     total_loss, total_motion_loss, total_frames_loss = [0] * 3
-    for data, mask in dataloader:
+    for data, mask in tqdm(dataloader):
         data = data.float().to(device)
         mask = mask.float().to(device)
 
