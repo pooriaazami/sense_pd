@@ -151,7 +151,7 @@ def main(args):
         random_frame_mask_fn, 
         config.training.epochs, 
         device, 
-        config.experiment_name
+        config.experiment_name,
         config.training.save_freq
     )
 
