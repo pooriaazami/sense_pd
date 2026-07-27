@@ -102,7 +102,7 @@ def pretrain(
     ):
 
     dt = datetime.now()
-    name = f'{exp_name}__{dt.month}_{dt.day}_{dt.hour}'
+    name = f'{exp_name}__{dt.month}_{dt.day}_{dt.hour}_{dt.minute}'
     writer = SummaryWriter(os.path.join('assets', 'logs', name))
 
     for epoch in range(1, epochs + 1):
