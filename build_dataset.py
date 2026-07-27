@@ -45,15 +45,15 @@ def sliding_windows(seq, L, stride):
 
 def squeeze_dataset(data):
     key = list(data.keys())[0]
-    data = data[key][0]
+    seqs = data[key][0]
     fps = data[key][1]
 
     dataset = []
-    cameras = list(data.keys())
+    cameras = list(seqs.keys())
     for camera in cameras:
-        dataset.append(data[camera]['data_3d'])
+        dataset.append(seqs[camera]['data_3d'])
 
-    return data, fps
+    return dataset, fps
 
 def resample_sequence(seq, old_fps, new_fps):
     """
