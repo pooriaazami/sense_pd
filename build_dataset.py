@@ -100,7 +100,7 @@ def convert_seq(seq, normalizer, fps, root):
 
         destination = os.path.join(
             DATASET_ROOT,
-            root.split('/')[-1].replace('.npz', '') + '.pkl'
+            root.split('/')[-1].replace('.npz', '') + f'slice_{i}.pkl'
         )
 
         with open(destination, 'wb') as file:
