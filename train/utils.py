@@ -15,4 +15,4 @@ class RandomFrameMask:
 
     def __call__(self, x):
         mask = (torch.rand(x.shape[1]) >= self.ratio).unsqueeze(1).unsqueeze(1).unsqueeze(0).to(self.device)
-        return x * mask, mask
+        return x * mask
