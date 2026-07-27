@@ -14,6 +14,7 @@ MPIINF = glob.glob(os.path.join('datasets', 'MPIINF', 'converted', '*.npz'))
 DATASET_ROOT = os.path.join('datasets', 'preprocessed')
 
 FPS = 25
+AIST_FPS = 60
 NUM_FRAMES = 81
 STRIDE = 20
 
@@ -129,8 +130,7 @@ def convert_aist_item(files, normalizer):
             aist_data = np.load(file)['data']
 
         aist_data = torch.from_numpy(aist_data)
-        aist_data, fps = squeeze_dataset(aist_data)
-        convert_seq(aist_data, normalizer, fps, file_path)
+        convert_seq(aist_data, normalizer, AIST_FPS, file_path)
 
         print(f'[DONE]')
 
