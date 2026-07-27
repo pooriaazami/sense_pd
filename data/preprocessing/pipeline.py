@@ -16,7 +16,7 @@ class Normalizer:
     def __init__(self, paths):
         self.bones_idx = Normalizer.compute_bones(paths)
 
-    def normalize_pose(self, pose: torch.Tensor):
+    def __call__(self, pose: torch.Tensor):
         """
         pose: Input sequence with shape (T, J, 3)
         """
