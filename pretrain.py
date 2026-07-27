@@ -19,7 +19,7 @@ from data import Motion3DDataset
 from train import motion_loss_fn, joints_loss_fn, RandomFrameMask, RandomJointMask
 
 def pretext_loss(predicted_joints, ground_truth, mask, lambd):
-    motion_loss = motion_loss_fn(predicted_joints, mask)
+    motion_loss = motion_loss_fn(predicted_joints, ground_truth, mask)
     joints_loss = joints_loss_fn(predicted_joints, ground_truth, mask)
     
     return lambd * motion_loss + joints_loss, motion_loss, joints_loss

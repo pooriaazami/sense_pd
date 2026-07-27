@@ -1,12 +1,21 @@
 import torch
+import torch.nn.functional as F
 
-def motion_loss_fn(predicted_joints, mask):
+def motion_loss_fn(predicted_joints, ground_truth, mask):
     mask = mask.unsqueeze(-1).unsqueeze(-1)
-    x = predicted_joints * mask
-    x = x[:, :-1, :, :] - x[:, 1:, :, :]
-    x = torch.linalg.norm(x, dim=-1)
-    return x.sum()
+
+    predicted_joints = predicted_joints * mask
+    predicted_motion = predicted_joints[:, :-1, :, :] - predicted_joints[:, 1:, :, :]
+    predicted_motion = torch.linalg.norm(predicted_motion, dim=-1)
+
+    real_joints = ground_truth * mask
+    real_motion = real_joints[:, :-1, :, :] - real_joints[:, 1:, :, :]
+    real_motion = torch.linalg.norm(real_motion, dim=1)
+
+    motion_loss = F.l2_loss(predicted_motion - real_motion)
+    
+    return motion_loss
 
 def joints_loss_fn(predicted_joints, ground_truth, mask):
     mask = mask.unsqueeze(-1)
-    return (torch.linalg.norm(predicted_joints - ground_truth, dim=-1) * mask).sum()
+    return (torch.linalg.norm(predicted_joints - ground_truth, dim=-1) * mask).mean()
