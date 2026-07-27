@@ -122,7 +122,7 @@ def main(args):
 
     loss_fn = partial(pretext_loss, lambd=config.training.lambda_motion)
     device = torch.device(config.training.device)
-    backbone = MotionAGFormer(*(config.model)).to(device)
+    backbone = MotionAGFormer(**config.model).to(device)
     regressor = nn.Linear(
         in_features=config.model.dim_rep,
         out_features=3
