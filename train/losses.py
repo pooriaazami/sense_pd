@@ -8,9 +8,9 @@ def motion_loss_fn(predicted_joints, ground_truth, mask):
     predicted_motion = predicted_joints[:, :-1, :, :] - predicted_joints[:, 1:, :, :]
     predicted_motion = torch.linalg.norm(predicted_motion, dim=-1)
 
-    real_joints = ground_truth * mask
-    real_motion = real_joints[:, :-1, :, :] - real_joints[:, 1:, :, :]
-    real_motion = torch.linalg.norm(real_motion, dim=1)
+    ground_truth = ground_truth * mask
+    real_motion = ground_truth[:, :-1, :, :] - ground_truth[:, 1:, :, :]
+    real_motion = torch.linalg.norm(real_motion, dim=-1)
 
     motion_loss = F.mse_loss(predicted_motion, real_motion)
     
