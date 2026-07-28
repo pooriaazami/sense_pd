@@ -87,7 +87,7 @@ def convert_seq(seq, normalizer, smpl_model, h36m_regressor, fps, label, root_pa
     seq = resample_sequence(seq, fps, FPS)
 
     for i, data in enumerate(seq):
-        print('\tSeq {i + 1}')
+        print(f'\tSeq {i + 1}')
         destination = os.path.join(
             root_path, f'{dataset_name}_seq_{i + 1}.pkl'
         )
