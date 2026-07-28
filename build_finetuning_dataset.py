@@ -95,7 +95,7 @@ def convert_seq(seq, key, seq_key, normalizer, smpl_model, h36m_regressor, fps, 
 
         data = {
             'window': window.cpu().numpy(),
-            'mask': mask.cpu().numpy()
+            'mask': mask.cpu().numpy(),
             'label': label
         }
         
