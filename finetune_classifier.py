@@ -53,7 +53,7 @@ def main():
     loss_fn = CategoricalOrdinalFocalLoss()
 
     if config.backbone_path:
-        backbone.load_state_dict(torch.load(config.backbone_path, weights_only=True))
+        backbone.load_state_dict(torch.load(config.backbone_path))
 
     for val_dataset_name in DATASETS:
         train_datasets = DATASETS.copy()
