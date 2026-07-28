@@ -28,7 +28,7 @@ def train_epoch(dataloader, backbone, classifier, loss_fn, optimizer, device):
 
         seq = data['seq'].to(device)
         mask = data['mask'].to(device)
-        label = data['label'].to(device)
+        label = data['label'].to(device).squeeze()
 
         embeddings = backbone(seq)
         embeddings = transform_embedding(embeddings, mask)
