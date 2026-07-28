@@ -1,6 +1,7 @@
 import os
 import glob
 
+import torch
 from torch.utils.data import Dataset
 
 import pandas as pd
@@ -21,4 +22,9 @@ class CarePDDataset(Dataset):
         path = self.files[0]
 
         file = pd.read_pickle(path)
-        return file
+
+        seq = torch.from_numpy(file['window'])
+        mask = torch.from_numpy(file['mask'])
+        label = torch.tensor([file['label']])
+
+        return {'seq': seq, 'mask': mask, 'label': label}

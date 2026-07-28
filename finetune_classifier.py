@@ -27,6 +27,21 @@ def convert_params(params):
     params.act_layer = act_mapper[params.act_layer]
     return params
 
+def collate_fn(batch):
+    """
+    Collate function to stack data from the SlicedPDDataset into batches.
+    
+    Args:
+        batch: A list of dictionaries returned by __getitem__.
+    """
+    # Use default_collate logic, but explicitly handle the dictionary keys
+    # print(batch)
+    return {
+        'seq': torch.stack([item['seq'].detach() for item in batch]),
+        'label': torch.stack([item['label'].detach() for item in batch]),
+        'mask': torch.stack([item['pad_mask'].detach() for item in batch])
+    }
+
 def main():
     parser = argparse.ArgumentParser(description='This module trains the classifier model.')
 
@@ -62,8 +77,14 @@ def main():
         train_dataset = CarePDDataset(config.dataset, train_datasets)
         val_dataset = CarePDDataset(config.dataset, [val_dataset_name])
 
-        train_dataloader = DataLoader(train_dataset, batch_size=config.training.batch_size, shuffle=True)
-        val_dataloader = DataLoader(val_dataset, batch_size=config.training.batch_size, shuffle=True)
+        train_dataloader = DataLoader(train_dataset, 
+                                    batch_size=config.training.batch_size, 
+                                    shuffle=True,
+                                    collate_fn=collate_fn)
+        val_dataloader = DataLoader(val_dataset, 
+                                    batch_size=config.training.batch_size, 
+                                    shuffle=True,
+                                    collate_fn=collate_fn)
 
         train_model(
             train_dataloader,
