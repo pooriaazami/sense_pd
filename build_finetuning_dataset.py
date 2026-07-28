@@ -106,7 +106,7 @@ def convert(dataset_path, save_path, normalizer, smpl_model, h36m_regressor):
 
     for key in dataset.keys():
         for seq_key in dataset[key].keys():
-            seq = dataset[key][seq_key].to(DEVICE)
+            seq = dataset[key][seq_key]
             label = dataset[key][seq_key]['UPDRS_GAIT']
             fps = dataset[key][seq_key]['fps']
 
