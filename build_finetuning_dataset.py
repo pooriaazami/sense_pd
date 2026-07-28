@@ -82,6 +82,7 @@ def convert_seq(seq, normalizer, smpl_model, h36m_regressor, fps, label, root_pa
     vertices_world = out_world.vertices
 
     seq = vertices2joints(h36m_regressor, vertices_world)
+    seq = seq.detach()
     seq = normalizer(seq)
     seq = resample_sequence(seq, fps, FPS)
 
@@ -92,7 +93,7 @@ def convert_seq(seq, normalizer, smpl_model, h36m_regressor, fps, label, root_pa
         )
 
         data = {
-            'seq': data,
+            'seq': data.cpu().numpy(),
             'label': label
         }
         
@@ -105,7 +106,7 @@ def convert(dataset_path, save_path, normalizer, smpl_model, h36m_regressor):
 
     for key in dataset.keys():
         for seq_key in dataset[key].keys():
-            seq = dataset[key][seq_key]
+            seq = dataset[key][seq_key].to(DEVICE)
             label = dataset[key][seq_key]['UPDRS_GAIT']
             fps = dataset[key][seq_key]['fps']
 
