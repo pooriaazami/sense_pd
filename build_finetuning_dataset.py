@@ -77,7 +77,7 @@ def resample_sequence(seq, old_fps, new_fps):
 
     return x.squeeze(0).T.reshape(T_new, J, C)
 
-def convert_seq(seq, normalizer, smpl_model, h36m_regressor, fps, label, root_path, dataset_name):
+def convert_seq(seq, key, seq_key, normalizer, smpl_model, h36m_regressor, fps, label, root_path, dataset_name):
     out_world, _ = generate_smpl_in_world(smpl_model, seq)
     vertices_world = out_world.vertices
 
@@ -89,7 +89,7 @@ def convert_seq(seq, normalizer, smpl_model, h36m_regressor, fps, label, root_pa
     for i, data in enumerate(seq):
         print(f'\tSeq {i + 1}')
         destination = os.path.join(
-            root_path, f'{dataset_name}_seq_{i + 1}.pkl'
+            root_path, f'{dataset_name}_{str(key)}_{str(seq_key)}_seq_{i + 1}.pkl'
         )
 
         data = {
@@ -110,7 +110,7 @@ def convert(dataset_path, save_path, normalizer, smpl_model, h36m_regressor):
             label = dataset[key][seq_key]['UPDRS_GAIT']
             fps = dataset[key][seq_key]['fps']
 
-            convert_seq(seq, normalizer, smpl_model, h36m_regressor, fps, label, save_path, dataset_name)
+            convert_seq(seq, key, seq_key, normalizer, smpl_model, h36m_regressor, fps, label, save_path, dataset_name)
 
 def main():
     normalizer = Normalizer(PATHS)
