@@ -71,6 +71,7 @@ def main():
         backbone.load_state_dict(torch.load(config.backbone_path)())
 
     for val_dataset_name in DATASETS:
+        print(f'Val Dataset: {val_dataset_name}')
         train_datasets = DATASETS.copy()
         train_datasets.remove(val_dataset_name)
 
