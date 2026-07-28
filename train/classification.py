@@ -39,7 +39,7 @@ def train_epoch(dataloader, backbone, classifier, loss_fn, optimizer, device):
         print('='*100)
         loss = loss_fn(preds, label)
 
-        loss.backwards()
+        loss.backward()
         optimizer.step()
 
         total_loss += loss.detach().cpu().numpy().item()
