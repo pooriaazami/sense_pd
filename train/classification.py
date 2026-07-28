@@ -34,9 +34,6 @@ def train_epoch(dataloader, backbone, classifier, loss_fn, optimizer, device):
         embeddings = transform_embedding(embeddings, mask)
 
         preds = classifier(embeddings)
-        print('='*100)
-        print(preds.shape, label.shape)
-        print('='*100)
         loss = loss_fn(preds, label)
 
         loss.backward()
@@ -80,7 +77,7 @@ def validation_epoch(dataloader, backbone, classifier, loss_fn, device):
         for data in tqdm(dataloader):
             seq = data['seq'].to(device)
             mask = data['mask'].to(device)
-            label = data['label'].to(device)
+            label = data['label'].to(device).squeeze()
 
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
