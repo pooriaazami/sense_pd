@@ -1,4 +1,4 @@
-experiment_name: 'Pretext_3D'
+experiment_name: 'Direct Finetunning'
 
 model: 
   n_layers: 16
@@ -25,13 +25,13 @@ model:
   graph_only: False
   n_frames: 81
 
-dataset: datasets/preprocessed
+backbone_path: assets/checkpoints/epoch_140.pth
+
+dataset: datasets/CARE-PD/preprocessed/
 
 training:
   lr: 0.0004
   batch_size: 8
-  lambda_motion: 1
-  joint_mask_ratio: 0.5
-  frame_mask_ratio: 0.5
+  optimizer: adamw
   epochs: 200
   save_freq: 20

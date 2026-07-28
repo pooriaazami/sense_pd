@@ -86,7 +86,8 @@ def convert_seq(seq, key, seq_key, normalizer, smpl_model, h36m_regressor, fps, 
     seq = normalizer(seq)
     seq = resample_sequence(seq, fps, FPS)
     windows, masks = sliding_windows(seq, NUM_FRAMES, STRIDE)
-    
+
+    print(f'{key} {seq_key}')
     for i, (window, mask) in enumerate(zip(windows, masks)):
         print(f'\tSeq {i + 1}')
         destination = os.path.join(

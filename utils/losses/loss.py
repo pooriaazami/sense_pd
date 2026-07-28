@@ -287,4 +287,3 @@ def loss_angle_velocity(x, gt):
     gt_av = gt_a[:,1:] - gt_a[:,:-1]
     # return nn.L1Loss()(x_av, gt_av)
     return F.l1_loss(x_av, gt_av)
-
