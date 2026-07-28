@@ -40,14 +40,6 @@ def train_epoch(dataloader, backbone, classifier, loss_fn, optimizer, device):
         optimizer.step()
 
         total_loss += loss.detach().cpu().numpy().item()
-        print('='*100)
-        print('embeddings:')
-        print(embeddings)
-        print('Preds:')
-        print(preds.argmax(1).detach().cpu().tolist())
-        print('Labels:')
-        print('='*100)
-        print(label.cpu().tolist())
         preds_log.extend(preds.argmax(1).detach().cpu().tolist())
         labels_log.extend(label.cpu().tolist())
 
