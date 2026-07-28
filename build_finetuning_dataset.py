@@ -85,15 +85,17 @@ def convert_seq(seq, key, seq_key, normalizer, smpl_model, h36m_regressor, fps, 
     seq = seq.detach()
     seq = normalizer(seq)
     seq = resample_sequence(seq, fps, FPS)
-
-    for i, data in enumerate(seq):
+    windows, masks = sliding_windows(seq, NUM_FRAMES, STRIDE)
+    
+    for i, (window, mask) in enumerate(zip(windows, masks)):
         print(f'\tSeq {i + 1}')
         destination = os.path.join(
             root_path, f'{dataset_name}_{str(key)}_{str(seq_key)}_seq_{i + 1}.pkl'
         )
 
         data = {
-            'seq': data.cpu().numpy(),
+            'window': window.cpu().numpy(),
+            'mask': mask.cpu().numpy()
             'label': label
         }
         
