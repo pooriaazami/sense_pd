@@ -19,7 +19,7 @@ class CarePDDataset(Dataset):
         return len(self.files)
 
     def __getitem__(self, x):
-        path = self.files[0]
+        path = self.files[x]
 
         file = pd.read_pickle(path)
 
