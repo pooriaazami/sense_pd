@@ -39,7 +39,7 @@ def collate_fn(batch):
     return {
         'seq': torch.stack([item['seq'].detach() for item in batch]),
         'label': torch.stack([item['label'].detach() for item in batch]),
-        'mask': torch.stack([item['pad_mask'].detach() for item in batch])
+        'mask': torch.stack([item['mask'].detach() for item in batch])
     }
 
 def main():
