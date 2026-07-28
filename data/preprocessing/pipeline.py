@@ -25,7 +25,7 @@ class Normalizer:
         
         bones = pose[:, self.bones_idx, :]
         bone_lengths = bones[:, :, 0, :] - bones[:, :, 1, :]
-        s = np.linalg.norm(bone_lengths, axis=1).mean()
+        s = torch.linalg.norm(bone_lengths, dim=1).mean()
         pose = pose / s
 
         pose = pose - pose[0, 0, 2]
