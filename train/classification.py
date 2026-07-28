@@ -151,7 +151,7 @@ def train_model(train_dataloader,
     else:
         unfreeze_model(backbone)
 
-    for epoch in range(1, epochs):
+    for epoch in range(1, epochs + 1):
         train_log = train_epoch(train_dataloader, backbone, classifier, loss_fn, optimizer, device)
         log_to_tensorboard(log_writer, epoch, train_log, dataset_name,'train')
 
