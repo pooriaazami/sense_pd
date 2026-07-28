@@ -83,6 +83,9 @@ def validation_epoch(dataloader, backbone, classifier, loss_fn, device):
             embeddings = transform_embedding(embeddings, mask)
 
             preds = classifier(embeddings)
+            print('='*100)
+            print(preds.shape, label.shape)
+            print('='*100)
             loss = loss_fn(preds, label)
 
             total_loss += loss.detach().cpu().numpy().item()
