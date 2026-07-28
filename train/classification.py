@@ -158,6 +158,4 @@ def train_model(train_dataloader,
         val_log = validation_epoch(val_dataloader, backbone, classifier, loss_fn, device)
         log_to_tensorboard(log_writer, epoch, val_log, dataset_name, 'val')
 
-    return val_log
-
     
