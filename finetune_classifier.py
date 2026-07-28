@@ -46,7 +46,7 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     backbone = MotionAGFormer(**convert_params(config.model)).to(device)
-    classifier = nn.Linear(config.model.dim_rep * config.model.num_joints, NUM_CLASSES)
+    classifier = nn.Linear(config.model.dim_rep * config.data.num_joints, NUM_CLASSES)
 
     optimizer = optim.AdamW(chain(backbone.parameters(), classifier.parameters()), lr=config.training.lr)
 
