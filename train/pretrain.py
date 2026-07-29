@@ -37,9 +37,6 @@ def train_epoch(
         joint_masked_embeddings = backbone(data_joint_masked)
         joint_masked_embeddings = transform_embedding(joint_masked_embeddings, mask)
         predicted_masked_joints = regressor(joint_masked_embeddings)
-        print('='*100)
-        print(predicted_masked_joints.shape, data.shape, joint_masked_embeddings.shape)
-        print('='*100)
         joint_masked_loss, joint_masked_temporal_loss, joint_masked_reconstruction_loss = loss_fn(predicted_masked_joints, data)
         
         # Frame Masked
