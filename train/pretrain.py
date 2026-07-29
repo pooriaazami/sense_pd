@@ -55,11 +55,12 @@ def train_epoch(
         total_joint_masked_reconstruction_loss += joint_masked_reconstruction_loss.detach().cpu().numpy().item()
         total_joint_masked_loss += joint_masked_loss.detach().cpu().numpy().item()
 
-        total_frame_masked_temporal_loss = frame_masked_temporal_loss.detach().cpu().numpy().item()
-        total_frame_masked_reconstruction_loss = frame_masked_reconstruction_loss.detach().cpu().numpy().item()
+        total_frame_masked_temporal_loss += frame_masked_temporal_loss.detach().cpu().numpy().item()
+        total_frame_masked_reconstruction_loss += frame_masked_reconstruction_loss.detach().cpu().numpy().item()
         total_frame_masked_loss += frame_masked_loss.detach().cpu().numpy().item()
 
         total_loss += loss.detach().cpu().numpy().item()
+        break # Test
         
     return {
         'frame_masked': {
@@ -117,11 +118,12 @@ def validation_epoch(
             total_joint_masked_reconstruction_loss += joint_masked_reconstruction_loss.detach().cpu().numpy().item()
             total_joint_masked_loss += joint_masked_loss.detach().cpu().numpy().item()
 
-            total_frame_masked_temporal_loss = frame_masked_temporal_loss.detach().cpu().numpy().item()
-            total_frame_masked_reconstruction_loss = frame_masked_reconstruction_loss.detach().cpu().numpy().item()
+            total_frame_masked_temporal_loss += frame_masked_temporal_loss.detach().cpu().numpy().item()
+            total_frame_masked_reconstruction_loss += frame_masked_reconstruction_loss.detach().cpu().numpy().item()
             total_frame_masked_loss += frame_masked_loss.detach().cpu().numpy().item()
 
             total_loss += loss.detach().cpu().numpy().item()
+            break # Test
         
     return {
         'frame_masked': {
@@ -137,34 +139,34 @@ def validation_epoch(
 
 def log_to_tensorboard(writer, step, train_log, val_log):
     # Frame Masked
-    writer.add_scalar('Pretrain/Loss/FrameMasked/temporal_loss', {
+    writer.add_scalars('Pretrain/Loss/FrameMasked/temporal_loss', {
         'train': train_log['frame_masked']['temporal_loss'],
         'val': val_log['frame_masked']['temporal_loss']
     }, step)
-    writer.add_scalar('Pretrain/Loss/FrameMasked/', {
+    writer.add_scalars('Pretrain/Loss/FrameMasked/', {
         'train': train_log['frame_masked']['reconstruction_loss'],
         'val': val_log['frame_masked']['reconstruction_loss']
         }, step)
-    writer.add_scalar('Pretrain/Loss/FrameMasked/', {
+    writer.add_scalars('Pretrain/Loss/FrameMasked/', {
         'train': train_log['frame_masked']['temporal_loss'] + train_log['frame_masked']['reconstruction_loss'],
         'val': val_log['frame_masked']['temporal_loss'] + val_log['frame_masked']['reconstruction_loss']
         }, step)
 
     # Joint Masked
-    writer.add_scalar('Pretrain/Loss/JointMasked/temporal_loss', {
+    writer.add_scalars('Pretrain/Loss/JointMasked/temporal_loss', {
         'train': train_log['joint_masked']['temporal_loss'],
         'val': val_log['joint_masked']['temporal_loss']
     }, step)
-    writer.add_scalar('Pretrain/Loss/JointMasked/', {
+    writer.add_scalars('Pretrain/Loss/JointMasked/', {
         'train': train_log['joint_masked']['reconstruction_loss'],
         'val': val_log['joint_masked']['reconstruction_loss']
         }, step)
-    writer.add_scalar('Pretrain/Loss/JointMasked/', {
+    writer.add_scalars('Pretrain/Loss/JointMasked/', {
         'train': train_log['joint_masked']['temporal_loss'] + train_log['joint_masked']['reconstruction_loss'],
         'val': val_log['joint_masked']['temporal_loss'] + val_log['joint_masked']['reconstruction_loss']
         }, step)
 
-    writer.add_scalar('Pretrain/Loss/Total/', {
+    writer.add_scalars('Pretrain/Loss/Total/', {
             'train': train_log['total'],
             'val': val_log['total']
         }, step)

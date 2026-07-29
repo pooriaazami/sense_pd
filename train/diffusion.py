@@ -52,7 +52,7 @@ def validation_epoch(backbone, d3dp, dataloader, device):
     return {'loss': total_loss}
 
 def update_log(writer, train_log, val_log, step):
-    writer.add_scalar(f'Loss/', {
+    writer.add_scalars(f'Loss/', {
         'train': train_log['loss'],
         'val': val_log['loss']
     }, step)
