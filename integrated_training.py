@@ -188,7 +188,7 @@ def main():
                     )
 
     regressor = nn.Linear(
-        in_features=config.model.dim_rep,
+        in_features=config.model.dim_rep*config.dataset.num_joints,
         out_features=3
     ).to(device)
 
