@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from utils import get_config
-from train.diffusion import train_diffusion
+from train.diffusion import train_diffusion_model
 from models import MotionAGFormer
 from data import Motion3DDataset
 
@@ -67,7 +67,7 @@ def main():
     d3dp = ...
     optimizer = optimizer = optim.AdamW(chain(backbone.parameters(), classifier.parameters()), lr=config.training.lr)
 
-    train_diffusion(backbone, classifier, d3dp, dataloader, optimizer, config.training.epochs, device, writer)
+    train_diffusion_model(backbone, classifier, d3dp, dataloader, optimizer, config.training.epochs, device, writer)
 
 if __name__ == '__main__':
     main()

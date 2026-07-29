@@ -44,6 +44,12 @@ training:
     frame_mask_ratio: 0.5
     epochs: 200
     save_freq: 20
+  d3dp:
+    number_of_frames: 81
+    test_time_augmentation: false
+    timesteps: 1000
+    timesteps_eval: 1000 
+    scale: 1.0
 
   diffusion:
     lr: 0.0004

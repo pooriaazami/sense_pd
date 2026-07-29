@@ -74,6 +74,14 @@ class  MixSTE2(nn.Module):
         )
 
 
+    def train(self):
+        super().train()
+        self.is_train = True
+
+    def eval(self):
+        super().eval()
+        self.is_train = False
+
 
     def STE_forward(self, x, t):
 

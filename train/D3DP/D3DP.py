@@ -20,14 +20,15 @@ class D3DP(nn.Module):
                  timesteps,
                  timesteps_eval,
                  scale,
+                 dim_rep,
                  joints_left, 
                  joints_right, 
-                 is_train=True, 
+                 train=True, 
                  num_proposals=1, 
                  sampling_timesteps=1, 
                  num_joints=17, 
-                 pose_estimator=None,
-                 condition_proj=None):
+                 pose_estimator=None
+                ):
         super().__init__()
 
         self.num_joints = num_joints
@@ -37,7 +38,7 @@ class D3DP(nn.Module):
         self.flip = test_time_augmentation
         self.joints_left = joints_left
         self.joints_right = joints_right
-        self.is_train = is_train
+        self.is_train = train
         
         # build diffusion
         sampling_timesteps = sampling_timesteps
@@ -84,11 +85,8 @@ class D3DP(nn.Module):
 
         # Build Dynamic Head.
         #self.head = DynamicHead(cfg=cfg, roi_input_shape=self.backbone.output_shape())
-        drop_path_rate=0
-        if is_train:
-            drop_path_rate=0.1
         
-        self.condition_proj = condition_proj
+        self.condition_proj = nn.Linear(dim_rep, dim_rep)
         self.pose_estimator = pose_estimator
 
     def predict_noise_from_start(self, x_t, t, x0):
@@ -226,6 +224,14 @@ class D3DP(nn.Module):
         sqrt_one_minus_alphas_cumprod_t = extract(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape)
 
         return sqrt_alphas_cumprod_t * x_start + sqrt_one_minus_alphas_cumprod_t * noise
+
+    def train(self):
+        super().train()
+        self.pose_estimator.train()
+
+    def eval(self):
+        super.eval()
+        self.pose_estimator.eval()
 
     def forward(self, features, input_3d_flip=None):
         B = features.shape[0]

@@ -181,13 +181,9 @@ def pretrain(
         random_frame_mask_fn, 
         epochs, 
         device, 
-        exp_name,
+        writer,
         save_freq
     ):
-
-    dt = datetime.now()
-    name = f'{exp_name}__{dt.month}_{dt.day}_{dt.hour}_{dt.minute}'
-    writer = SummaryWriter(os.path.join('assets', 'logs', name))
 
     for epoch in range(1, epochs + 1):
         train_log = train_epoch(

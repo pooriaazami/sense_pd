@@ -5,9 +5,8 @@ from tqdm import tqdm
 from utils import loss_mpjpe
 from .utils import transform_embedding
 
-def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
+def train_epoch(backbone, d3dp, dataloader, optimizer, device):
     backbone.train()
-    regressor.train()
     d3dp.train()
 
     total_loss = 0
@@ -19,8 +18,7 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
 
         embeddings = backbone(seq)
         embeddings = transform_embedding(embeddings, mask)
-        predicted_embedding = d3dp(embeddings)
-        predicted_joints = regressor(predicted_embedding)
+        predicted_joints = d3dp(embeddings)
 
         loss = loss_mpjpe(predicted_joints, seq)
 
@@ -31,9 +29,8 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
 
     return {'loss': total_loss}
 
-def validation_epoch(backbone, regressor, d3dp, dataloader, device):
+def validation_epoch(backbone, d3dp, dataloader, device):
     backbone.eval()
-    regressor.eval()
     d3dp.train()
 
     total_loss = 0
@@ -44,8 +41,7 @@ def validation_epoch(backbone, regressor, d3dp, dataloader, device):
 
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
-            predicted_embedding = d3dp(embeddings)
-            predicted_joints = regressor(predicted_embedding)
+            predicted_joints = d3dp(embeddings)
 
             loss = loss_mpjpe(predicted_joints, seq)
 
@@ -53,11 +49,16 @@ def validation_epoch(backbone, regressor, d3dp, dataloader, device):
 
     return {'loss': total_loss}
 
-def update_log(writer, log, step):
-    writer.add_scalar(f'Loss/', log['loss'], step)
+def update_log(writer, train_log, val_log, step):
+    writer.add_scalar(f'Loss/', {
+        'train': train_log['loss'],
+        'val': val_log['loss']
+    }, step)
 
-def train_diffusion(backbone, regressor, d3dp, dataloader, optimizer, epochs, device, writer):
+def train_diffusion_model(backbone, d3dp, train_dataloader, val_dataloader, optimizer, epochs, device, writer):
     for epoch in range(1, epochs+1):
-        log = train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device)
-        update_log(writer, log, epoch)
+        train_log = train_epoch(backbone, d3dp, train_dataloader, optimizer, device)
+        val_log = validation_epoch(backbone, d3dp, val_dataloader, device)
+
+        update_log(writer, train_log, val_log, epoch)
 

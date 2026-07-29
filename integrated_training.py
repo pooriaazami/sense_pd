@@ -15,12 +15,13 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from utils import get_config
-from models import MotionAGFormer
+from models import MotionAGFormer, MixSTE2
 from data import Motion3DDataset
-from train import RandomFrameMask, RandomJointMask
+from train import RandomFrameMask, RandomJointMask, D3DP
 from utils import motion_loss_fn, joints_loss_fn
 
 from train.pretrain import pretrain
+from train.diffusion import train_diffusion_model
 
 def parse_args():
     parser = argparse.ArgumentParser(description='This module trains the classifier model.')
@@ -81,7 +82,7 @@ def split_motion_files(dataset_root, test_size):
 
     return train_files, val_files
 
-def pretrain_model(config, backbone, regressor, device, train_dataloader, val_dataloader):
+def pretrain_model(config, backbone, regressor, device, train_dataloader, val_dataloader, writer):
     loss_fn = partial(pretext_loss, lambd=config.training.pretraining.lambda_motion)
     optimizer = optim.AdamW(
         chain(backbone.parameters(), regressor.parameters()),
@@ -104,13 +105,49 @@ def pretrain_model(config, backbone, regressor, device, train_dataloader, val_da
         loss_fn=loss_fn,
         device=device,
         save_freq=config.training.pretraining.save_freq,
+        writer=writer,
         epochs=config.training.pretraining.epochs
     )
 
-def train_diffusion():
-    # condition_proj # nn.Linear(512, 512)
-    # pose_estimator MixSTE2(num_frame=self.frames, num_joints=17, in_chans=512, embed_dim_ratio=args.cs, depth=args.dep, num_heads=8, mlp_ratio=2., qkv_bias=True, qk_scale=None,drop_path_rate=drop_path_rate, is_train=is_train)
-    ...
+def freeze_model(model):
+    for param in model.parameters():
+        param.requires_grad_(False)
+
+def train_diffusion(config, 
+                    backbone,
+                    dim_rep, 
+                    joints_left, 
+                    joints_right, 
+                    pose_estimator,
+                    train_dataloader,
+                    val_dataloader,
+                    writer,
+                    device):
+    freeze_model(backbone)
+
+    d3dp = D3DP(
+        **config.training.d3dp,
+        joints_left=joints_left, 
+        joints_right=joints_right, 
+        num_proposals=1, 
+        sampling_timesteps=1, 
+        dim_rep=dim_rep,
+        num_joints=config.dataset.num_joints, 
+        pose_estimator=pose_estimator,
+    ).to(device)
+
+    optimizer = optim.AdamW(D3DP.parameters(), lr=config.diffusion.lr)
+
+    train_diffusion_model(
+        backbone=backbone,
+        d3dp=d3dp,
+        train_dataloader=train_dataloader,
+        val_dataloader=val_dataloader,
+        optimizer=optimizer,
+        epochs=config.diffusion.epochs,
+        writer=writer,
+        device=device
+    )
 
 def convert_params(params):
     act_mapper = {
@@ -124,7 +161,7 @@ def convert_params(params):
 def main():
     args = parse_args()
     config = get_config(args.config)
-    initiate_writer(config)
+    writer = initiate_writer(config)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -136,18 +173,34 @@ def main():
     )
 
     train_dataset = Motion3DDataset(train_files)
-    train_dataloader = DataLoader(train_dataset, 
-                            batch_size=config.training.batch_size, 
-                            shuffle=True)
+    train_dataloader = DataLoader(
+                        train_dataset, 
+                        batch_size=config.training.batch_size, 
+                        shuffle=True
+                    )
 
     val_dataset = Motion3DDataset(val_files)
-    val_dataloader = DataLoader(val_dataset, 
-                            batch_size=config.training.batch_size, 
-                            shuffle=True)
+    val_dataloader = DataLoader(
+                        val_dataset, 
+                        batch_size=config.training.batch_size, 
+                        shuffle=True
+                    )
 
     regressor = nn.Linear(
         in_features=config.model.dim_rep,
         out_features=3
+    ).to(device)
+
+    pose_estimator = MixSTE2(
+        num_frame=config.model.m_frames, 
+        num_joints=config.dataset.num_joints, 
+        in_chans=config.model.dim_rep, 
+        embed_dim_ratio=args.cs, 
+        depth=args.dep, 
+        num_heads=config.model.num_heads, 
+        mlp_ratio=config.model.mlp_ratio, 
+        qkv_bias=config.model.qkv_bias, 
+        qk_scale=config.model.qkv_scale,
     ).to(device)
 
     if args.pretrain:
@@ -157,11 +210,26 @@ def main():
             regressor=regressor, 
             device=device,
             train_dataloader=train_dataloader,
-            val_dataloader=val_dataloader
+            val_dataloader=val_dataloader,
+            writer=writer
         )
 
     if args.diffusion:
-        train_diffusion()
+        joints_left = [4, 5, 6, 11, 12, 13]
+        joints_right = [1, 2, 3, 14, 15, 16]
+        
+        train_diffusion(
+            config=config, 
+            backbone=backbone,
+            dim_rep=config.model.dim_rep, 
+            joints_left=joints_left, 
+            joints_right=joints_right, 
+            pose_estimator=pose_estimator,
+            train_dataloader=train_dataloader,
+            val_dataloader=val_dataloader,
+            writer=writer,
+            device=device
+        )
 
 if __name__ == '__main__':
     main()
