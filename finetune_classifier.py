@@ -87,8 +87,9 @@ def main():
     config = get_config(args.config)
     writer = initiate_writer(config)
 
+    convert_params(config.model)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    backbone = MotionAGFormer(**convert_params(config.model)).to(device)
+    backbone = MotionAGFormer(**config.model).to(device)
 
     loss_fn = CategoricalOrdinalFocalLoss()
 
@@ -96,7 +97,7 @@ def main():
     for val_dataset_name in DATASETS:
         print(f'Val Dataset: {val_dataset_name}')
 
-        backbone = MotionAGFormer(**convert_params(config.model)).to(device)
+        backbone = MotionAGFormer(**config.model).to(device)
 
         if config.backbone_path:
             backbone.load_state_dict(torch.load(config.backbone_path)())
