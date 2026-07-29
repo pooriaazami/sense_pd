@@ -41,7 +41,7 @@ def parse_args():
 
     parser.add_argument(
         '--diffusion',
-        action='store_flase',
+        action='store_false',
         default=True
     )
 
