@@ -2,8 +2,6 @@ import os
 import torch
 from datetime import datetime
 
-from torch.utils.tensorboard import SummaryWriter
-
 from tqdm import tqdm
 
 from .utils import transform_embedding
@@ -60,7 +58,6 @@ def train_epoch(
         total_frame_masked_loss += frame_masked_loss.detach().cpu().numpy().item()
 
         total_loss += loss.detach().cpu().numpy().item()
-        break # Test
         
     return {
         'frame_masked': {
@@ -123,7 +120,6 @@ def validation_epoch(
             total_frame_masked_loss += frame_masked_loss.detach().cpu().numpy().item()
 
             total_loss += loss.detach().cpu().numpy().item()
-            break # Test
         
     return {
         'frame_masked': {

@@ -54,14 +54,14 @@ training:
     lambda_motion: 1
     joint_mask_ratio: 0.5
     frame_mask_ratio: 0.5
-    epochs: 1
-    save_freq: 1
+    epochs: 140
+    save_freq: 20
 
   diffusion:
     lr: 0.0004
     optimizer: adamw
-    epochs: 1
-    save_freq: 1
+    epochs: 140
+    save_freq: 20
 
   classification:
     lr: 0.0004
