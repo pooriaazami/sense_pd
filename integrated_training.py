@@ -94,7 +94,6 @@ def pretrain_model(config, backbone, regressor, device, train_dataloader, val_da
                                            device=device)
 
     pretrain(
-        exp_name=config.experiment_name,
         backbone=backbone,
         regressor=regressor,
         train_dataloader=train_dataloader,
@@ -122,7 +121,8 @@ def train_diffusion(config,
                     train_dataloader,
                     val_dataloader,
                     writer,
-                    device):
+                    device,
+                    save_freq):
     freeze_model(backbone)
 
     d3dp = D3DP(
@@ -146,7 +146,8 @@ def train_diffusion(config,
         optimizer=optimizer,
         epochs=config.diffusion.epochs,
         writer=writer,
-        device=device
+        device=device,
+        save_freq=save_freq
     )
 
 def convert_params(params):
@@ -217,7 +218,7 @@ def main():
     if args.diffusion:
         joints_left = [4, 5, 6, 11, 12, 13]
         joints_right = [1, 2, 3, 14, 15, 16]
-        
+
         train_diffusion(
             config=config, 
             backbone=backbone,
@@ -228,7 +229,8 @@ def main():
             train_dataloader=train_dataloader,
             val_dataloader=val_dataloader,
             writer=writer,
-            device=device
+            device=device,
+            save_freq=config.training.diffusion.save_freq
         )
 
 if __name__ == '__main__':

@@ -1,3 +1,5 @@
+import os
+
 import torch
 
 from tqdm import tqdm
@@ -55,10 +57,21 @@ def update_log(writer, train_log, val_log, step):
         'val': val_log['loss']
     }, step)
 
-def train_diffusion_model(backbone, d3dp, train_dataloader, val_dataloader, optimizer, epochs, device, writer):
+def train_diffusion_model(backbone, 
+                          d3dp, 
+                          train_dataloader, 
+                          val_dataloader, 
+                          optimizer, 
+                          epochs, 
+                          device, 
+                          writer,
+                          save_freq):
     for epoch in range(1, epochs+1):
         train_log = train_epoch(backbone, d3dp, train_dataloader, optimizer, device)
         val_log = validation_epoch(backbone, d3dp, val_dataloader, device)
 
         update_log(writer, train_log, val_log, epoch)
+
+        if epoch % save_freq == 0:
+            torch.save(d3dp.state_dict(), os.path.join('assets', 'checkpoints', f'd3dp_epoch_{epoch}.pth'))
 
