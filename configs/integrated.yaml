@@ -35,6 +35,8 @@ dataset:
   num_joints: 17
 
 training:
+  batch_size: 8
+  
   d3dp:
     number_of_frames: 81
     test_time_augmentation: false
@@ -45,7 +47,6 @@ training:
   pretraining:
     lr: 0.0004
     optimizer: adamw
-    batch_size: 8
     lambda_motion: 1
     joint_mask_ratio: 0.5
     frame_mask_ratio: 0.5
@@ -55,7 +56,6 @@ training:
   diffusion:
     lr: 0.0004
     optimizer: adamw
-    batch_size: 8
     epochs: 1
     save_freq: 1
 
