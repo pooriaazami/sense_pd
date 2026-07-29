@@ -1,14 +1,7 @@
 from tqdm import tqdm
 
 from utils import loss_mpjpe
-
-def transform_embedding(embeddings, mask):
-    embeddings = embeddings.permute(0, 2, 3, 1)
-    mask = mask.unsqueeze(1).unsqueeze(1).float().to(embeddings.device)
-    embeddings = (embeddings * mask).sum(dim=-1) / mask.sum(dim=-1).clamp(min=1e-6)
-    embeddings = embeddings.flatten(1)
-
-    return embeddings
+from .utils import transform_embedding
 
 def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
     total_loss = 0
