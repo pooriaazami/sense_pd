@@ -193,7 +193,7 @@ def main():
     ).to(device)
 
     pose_estimator = MixSTE2(
-        num_frame=config.model.m_frames, 
+        num_frame=config.model.n_frames, 
         num_joints=config.dataset.num_joints, 
         in_chans=config.model.dim_rep, 
         embed_dim_ratio=args.cs, 
