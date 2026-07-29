@@ -74,8 +74,8 @@ class  MixSTE2(nn.Module):
         )
 
 
-    def train(self):
-        super().train()
+    def train(self, mode: bool = True):
+        super().train(mode)
         self.is_train = True
 
     def eval(self):

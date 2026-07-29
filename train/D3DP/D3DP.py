@@ -225,13 +225,17 @@ class D3DP(nn.Module):
 
         return sqrt_alphas_cumprod_t * x_start + sqrt_one_minus_alphas_cumprod_t * noise
 
-    def train(self):
-        super().train()
+    def train(self, mode: bool = True):
+        super().train(mode)
         self.pose_estimator.train()
 
+        return self
+
     def eval(self):
-        super.eval()
+        super().eval()
         self.pose_estimator.eval()
+
+        return self
 
     def forward(self, features, input_3d_flip=None):
         B = features.shape[0]
