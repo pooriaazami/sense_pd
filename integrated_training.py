@@ -86,7 +86,7 @@ def pretrain_model(config, backbone, regressor, device, train_dataloader, val_da
     loss_fn = partial(pretext_loss, lambd=config.training.pretraining.lambda_motion)
     optimizer = optim.AdamW(
         chain(backbone.parameters(), regressor.parameters()),
-        lr=config.training.lr
+        lr=config.training.pretraining.lr
     )
 
     random_joint_mask_fn = RandomJointMask(config.training.pretraining.joint_mask_ratio)
