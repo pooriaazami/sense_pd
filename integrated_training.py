@@ -35,13 +35,13 @@ def parse_args():
 
     parser.add_argument(
         '--pretrain',
-        action='store_true',
+        action='store_false',
         default=True
     )
 
     parser.add_argument(
         '--diffusion',
-        action='store_true',
+        action='store_flase',
         default=True
     )
 
