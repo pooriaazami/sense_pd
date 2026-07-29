@@ -144,7 +144,7 @@ def train_diffusion(config,
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
         optimizer=optimizer,
-        epochs=config.diffusion.epochs,
+        epochs=config.training.diffusion.epochs,
         writer=writer,
         device=device,
         save_freq=save_freq
