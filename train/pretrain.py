@@ -19,6 +19,9 @@ def train_epoch(
         device, 
     ):
 
+    backbone.train()
+    regressor.train()
+
     total_joint_masked_loss, total_joint_masked_temporal_loss, total_joint_masked_reconstruction_loss, \
     total_frame_masked_loss, total_frame_masked_temporal_loss, total_frame_masked_reconstruction_loss, \
     total_loss = [0] * 7
@@ -84,6 +87,9 @@ def validation_epoch(
     total_joint_masked_loss, total_joint_masked_temporal_loss, total_joint_masked_reconstruction_loss, \
     total_frame_masked_loss, total_frame_masked_temporal_loss, total_frame_masked_reconstruction_loss, \
     total_loss = [0] * 7
+
+    backbone.eval()
+    regressor.eval()
 
     with torch.no_grad():
         for data, mask in tqdm(dataloader):

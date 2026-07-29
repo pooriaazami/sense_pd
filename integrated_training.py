@@ -108,6 +108,8 @@ def pretrain_model(config, backbone, regressor, device, train_dataloader, val_da
     )
 
 def train_diffusion():
+    # condition_proj # nn.Linear(512, 512)
+    # pose_estimator MixSTE2(num_frame=self.frames, num_joints=17, in_chans=512, embed_dim_ratio=args.cs, depth=args.dep, num_heads=8, mlp_ratio=2., qkv_bias=True, qk_scale=None,drop_path_rate=drop_path_rate, is_train=is_train)
     ...
 
 def convert_params(params):

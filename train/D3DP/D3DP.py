@@ -14,23 +14,33 @@ class D3DP(nn.Module):
     Implement D3DP
     """
 
-    def __init__(self, args, joints_left, joints_right, is_train=True, num_proposals=1, sampling_timesteps=1, num_joints=17):
+    def __init__(self, 
+                 number_of_frames,
+                 test_time_augmentation, 
+                 timesteps,
+                 timesteps_eval,
+                 scale,
+                 joints_left, 
+                 joints_right, 
+                 is_train=True, 
+                 num_proposals=1, 
+                 sampling_timesteps=1, 
+                 num_joints=17, 
+                 pose_estimator=None,
+                 condition_proj=None):
         super().__init__()
 
         self.num_joints = num_joints
 
-        self.frames = args.number_of_frames
+        self.frames = number_of_frames
         self.num_proposals = num_proposals
-        self.flip = args.test_time_augmentation
+        self.flip = test_time_augmentation
         self.joints_left = joints_left
         self.joints_right = joints_right
         self.is_train = is_train
         
         # build diffusion
-        timesteps = args.timestep
-        timesteps_eval = args.timestep_eval
         sampling_timesteps = sampling_timesteps
-        self.objective = 'pred_x0'
         betas = cosine_beta_schedule(timesteps)
         alphas = 1. - betas
         alphas_cumprod = torch.cumprod(alphas, dim=0).to(torch.float32)
@@ -44,7 +54,7 @@ class D3DP(nn.Module):
         self.is_ddim_sampling = self.sampling_timesteps < timesteps
         self.ddim_sampling_eta = 1.
         self.self_condition = False
-        self.scale = args.scale
+        self.scale = scale
         self.box_renewal = True
         self.use_ensemble = True
 
@@ -78,9 +88,8 @@ class D3DP(nn.Module):
         if is_train:
             drop_path_rate=0.1
         
-        self.condition_proj = nn.Linear(512, 512)
-        self.pose_estimator = MixSTE2(num_frame=self.frames, num_joints=17, in_chans=512, embed_dim_ratio=args.cs, depth=args.dep,
-        num_heads=8, mlp_ratio=2., qkv_bias=True, qk_scale=None,drop_path_rate=drop_path_rate, is_train=is_train)
+        self.condition_proj = condition_proj
+        self.pose_estimator = pose_estimator
 
     def predict_noise_from_start(self, x_t, t, x0):
         return (
@@ -128,7 +137,7 @@ class D3DP(nn.Module):
     def ddim_sample(self, inputs_3d, input_cond, clip_denoised=True, do_postprocess=True):
         batch = inputs_3d.shape[0]
         shape = (batch, self.num_proposals, self.frames, 17, 512)
-        total_timesteps, sampling_timesteps, eta, objective = self.num_timesteps_eval, self.sampling_timesteps, self.ddim_sampling_eta, self.objective
+        total_timesteps, sampling_timesteps, eta = self.num_timesteps_eval, self.sampling_timesteps, self.ddim_sampling_eta
 
         # [-1, 0, 1, 2, ..., T-1] when sampling_timesteps == total_timesteps
         times = torch.linspace(-1, total_timesteps - 1, steps=sampling_timesteps + 1)
