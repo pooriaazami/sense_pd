@@ -14,8 +14,10 @@ class D3DP(nn.Module):
     Implement D3DP
     """
 
-    def __init__(self, args, joints_left, joints_right, backbone=None, is_train=True, num_proposals=1, sampling_timesteps=1):
+    def __init__(self, args, joints_left, joints_right, is_train=True, num_proposals=1, sampling_timesteps=1, num_joints=17):
         super().__init__()
+
+        self.num_joints = num_joints
 
         self.frames = args.number_of_frames
         self.num_proposals = num_proposals
@@ -76,16 +78,10 @@ class D3DP(nn.Module):
         if is_train:
             drop_path_rate=0.1
         
-        self.backbone = backbone
-        self.freeze_backbone()
         self.condition_proj = nn.Linear(512, 512)
         self.pose_estimator = MixSTE2(num_frame=self.frames, num_joints=17, in_chans=512, embed_dim_ratio=args.cs, depth=args.dep,
         num_heads=8, mlp_ratio=2., qkv_bias=True, qk_scale=None,drop_path_rate=drop_path_rate, is_train=is_train)
 
-    def freeze_backbone(self):
-        for param in self.backbone.parameters():
-            param.requires_grad = False
-        
     def predict_noise_from_start(self, x_t, t, x0):
         return (
                 (extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - x0) /
@@ -212,7 +208,6 @@ class D3DP(nn.Module):
 
         return torch.stack(preds_all, dim=1)
 
-
     # forward diffusion
     def q_sample(self, x_start, t, noise=None):
         if noise is None:
@@ -223,41 +218,26 @@ class D3DP(nn.Module):
 
         return sqrt_alphas_cumprod_t * x_start + sqrt_one_minus_alphas_cumprod_t * noise
 
-    def forward(self, input_3d, input_3d_flip=None):
-        B,T,J,C = input_3d.shape
-        x = self.backbone(input_3d)
-        original_feat = x
+    def forward(self, features, input_3d_flip=None):
+        B = features.shape[0]
         
         # preprare condition: [B, J, C] → flatten & proj → [B, 1, hidden]
-        x_cond = x[:,0]
-        cond = self.condition_proj(x_cond.reshape(B * J, -1)).reshape(B,1,J,-1)
+        x_cond = features[:,0]
+        cond = self.condition_proj(
+            x_cond.reshape(B * self.num_joints, -1)).reshape(B, 1, self.num_joints,-1)
         
         # Prepare Proposals.
-        if not self.is_train:
-            if self.flip:
-                results = self.ddim_sample_flip(x, input_3d_flip=input_3d_flip)
-            else:
-                results = self.ddim_sample(x, cond)
-            predicted_feat = results
-            B,D,H,T,J,C = results.shape
-            results = results.reshape(B*D*H,T,J,C)
-            if hasattr(self.backbone, 'module'):
-                results = self.backbone.module.get_regress(results)
-            else:
-                results = self.backbone.get_regress(results)
-            results = results.reshape(B,D,H,T,J,-1)
-            predicted_pose = results
-            return original_feat, predicted_feat, predicted_pose
-
         if self.is_train:
-            x_poses, noises, t = self.prepare_targets(x)
+            x_poses, _, t = self.prepare_targets(features)
             x_poses = x_poses.float()
             t = t.squeeze(-1)
 
-            pred_feat = self.pose_estimator(x_poses, t, cond)
-            pred_pose = self.backbone.module.get_regress(pred_feat)
-            return pred_feat, original_feat, pred_pose
-
+            return self.pose_estimator(x_poses, t, cond)
+        else:
+            if self.flip:
+                return self.ddim_sample_flip(features, input_3d_flip=input_3d_flip)
+            else:
+                return self.ddim_sample(features, cond)
 
     def prepare_diffusion_concat(self, pose_3d):
 

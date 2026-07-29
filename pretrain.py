@@ -25,6 +25,14 @@ def pretext_loss(predicted_joints, ground_truth, mask, lambd):
     
     return lambd * motion_loss + joints_loss, motion_loss, joints_loss
 
+def transform_embedding(embeddings, mask):
+    embeddings = embeddings.permute(0, 2, 3, 1)
+    mask = mask.unsqueeze(1).unsqueeze(1).float().to(embeddings.device)
+    embeddings = (embeddings * mask).sum(dim=-1) / mask.sum(dim=-1).clamp(min=1e-6)
+    embeddings = embeddings.flatten(1)
+
+    return embeddings
+
 def train_one_epoch(
         backbone, 
         regressor, 
@@ -51,6 +59,7 @@ def train_one_epoch(
         # Joint Masked
         data_joint_masked = random_joint_mask_fn(data)
         joint_masked_embeddings = backbone(data_joint_masked)
+        joint_masked_embeddings = transform_embedding(joint_masked_embeddings, mask)
         predicted_masked_joints = regressor(joint_masked_embeddings)
     
         total_loss_joint_masked, motion_loss_joint_masked, rec_loss_joint_masked = loss_fn(predicted_masked_joints, data, mask)
@@ -58,6 +67,7 @@ def train_one_epoch(
         # Frame Masked
         data_frame_masked = random_frame_mask_fn(data)
         frame_masked_embeddings = backbone(data_frame_masked)
+        frame_masked_embeddings = transform_embedding(frame_masked_embeddings, mask)
         predicted_masked_frames = regressor(frame_masked_embeddings)
     
         total_loss_frame_masked, motion_loss_frame_masked, rec_loss_frame_masked = loss_fn(predicted_masked_frames, data, mask)
