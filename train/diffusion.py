@@ -32,13 +32,13 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
 
         total_loss += loss.detach().cpu().numpy().item()
 
-    return {'total_loss': total_loss}
+    return {'loss': total_loss}
 
-def update_log(writer, log):
-    ...
+def update_log(writer, log, step):
+    writer.add_scalar(f'Loss/', log['loss'], step)
 
 def train_diffusion(backbone, regressor, d3dp, dataloader, optimizer, epochs, device, writer):
     for epoch in range(1, epochs+1):
         log = train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device)
-        update_log(writer, log)
+        update_log(writer, log, epoch)
 
