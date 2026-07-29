@@ -24,7 +24,7 @@ def train_epoch(backbone, d3dp, dataloader, optimizer, device):
         print('='*100)
         print(predicted_joints.shape, embeddings.shape, seq.shape)
         print('='*100)
-        loss = loss_mpjpe(predicted_joints, seq)
+        loss = loss_mpjpe(predicted_joints, embeddings)
 
         loss.backward()
         optimizer.step()
@@ -47,7 +47,7 @@ def validation_epoch(backbone, d3dp, dataloader, device):
             embeddings = transform_embedding(embeddings, mask)
             predicted_joints = d3dp(embeddings)
 
-            loss = loss_mpjpe(predicted_joints, seq)
+            loss = loss_mpjpe(predicted_joints, embeddings)
 
             total_loss += loss.detach().cpu().numpy().item()
 
