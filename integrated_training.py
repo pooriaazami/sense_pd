@@ -81,25 +81,12 @@ def split_motion_files(dataset_root, test_size):
 
     return train_files, val_files
 
-def pretrain_model(config, backbone, regressor, device):
+def pretrain_model(config, backbone, regressor, device, train_dataloader, val_dataloader):
     loss_fn = partial(pretext_loss, lambd=config.training.pretraining.lambda_motion)
     optimizer = optim.AdamW(
         chain(backbone.parameters(), regressor.parameters()),
         lr=config.training.lr
     )
-
-    train_files, val_files = split_motion_files(
-        config.dataset.pretraining.path, config.dataset.pretraining.test_size)
-    
-    train_dataset = Motion3DDataset(train_files)
-    train_dataloader = DataLoader(train_dataset, 
-                            batch_size=config.training.batch_size, 
-                            shuffle=True)
-
-    val_dataset = Motion3DDataset(val_files)
-    val_dataloader = DataLoader(val_dataset, 
-                            batch_size=config.training.batch_size, 
-                            shuffle=True)
 
     random_joint_mask_fn = RandomJointMask(config.training.pretraining.joint_mask_ratio)
     random_frame_mask_fn = RandomFrameMask(config.training.pretraining.frame_mask_ratio, 
@@ -142,6 +129,20 @@ def main():
     convert_params(config.model)
     backbone = MotionAGFormer(**config.model).to(device)
 
+    train_files, val_files = split_motion_files(
+        config.dataset.pretraining.path, config.dataset.pretraining.test_size
+    )
+
+    train_dataset = Motion3DDataset(train_files)
+    train_dataloader = DataLoader(train_dataset, 
+                            batch_size=config.training.batch_size, 
+                            shuffle=True)
+
+    val_dataset = Motion3DDataset(val_files)
+    val_dataloader = DataLoader(val_dataset, 
+                            batch_size=config.training.batch_size, 
+                            shuffle=True)
+
     regressor = nn.Linear(
         in_features=config.model.dim_rep,
         out_features=3
@@ -152,7 +153,9 @@ def main():
             config=config, 
             backbone=backbone, 
             regressor=regressor, 
-            device=device
+            device=device,
+            train_dataloader=train_dataloader,
+            val_dataloader=val_dataloader
         )
 
     if args.diffusion:
