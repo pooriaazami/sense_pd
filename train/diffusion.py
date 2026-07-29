@@ -12,11 +12,11 @@ def train_epoch(backbone, d3dp, dataloader, optimizer, device):
     d3dp.train()
 
     total_loss = 0
-    for data in tqdm(dataloader):
+    for seq, mask in tqdm(dataloader):
         optimizer.zero_grad()
         
-        seq = data['seq'].to(device)
-        mask = data['mask'].to(device)
+        seq = seq.to(device)
+        mask = mask.to(device)
 
         embeddings = backbone(seq)
         embeddings = transform_embedding(embeddings, mask)
@@ -37,9 +37,9 @@ def validation_epoch(backbone, d3dp, dataloader, device):
 
     total_loss = 0
     with torch.no_grad():
-        for data in tqdm(dataloader):
-            seq = data['seq'].to(device)
-            mask = data['mask'].to(device)
+        for seq, mask in tqdm(dataloader):
+            seq = seq.to(device)
+            mask = mask.to(device)
 
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
