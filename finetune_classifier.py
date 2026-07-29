@@ -61,17 +61,20 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     backbone = MotionAGFormer(**convert_params(config.model)).to(device)
-    classifier = nn.Linear(config.model.dim_rep * config.data.num_joints, NUM_CLASSES).to(device)
-
-    optimizer = optim.AdamW(chain(backbone.parameters(), classifier.parameters()), lr=config.training.lr)
 
     loss_fn = CategoricalOrdinalFocalLoss()
 
-    if config.backbone_path:
-        backbone.load_state_dict(torch.load(config.backbone_path)())
-
     for val_dataset_name in DATASETS:
         print(f'Val Dataset: {val_dataset_name}')
+
+        if config.backbone_path:
+            backbone.load_state_dict(torch.load(config.backbone_path)())
+        else:
+            backbone = MotionAGFormer(**convert_params(config.model)).to(device)
+
+        classifier = nn.Linear(config.model.dim_rep * config.data.num_joints, NUM_CLASSES).to(device)
+        optimizer = optim.AdamW(chain(backbone.parameters(), classifier.parameters()), lr=config.training.lr)
+
         train_datasets = DATASETS.copy()
         train_datasets.remove(val_dataset_name)
 
