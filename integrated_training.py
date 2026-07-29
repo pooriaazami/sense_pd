@@ -35,14 +35,12 @@ def parse_args():
 
     parser.add_argument(
         '--pretrain',
-        action='store_false',
-        default=True
+        action='store_true',
     )
 
     parser.add_argument(
         '--diffusion',
-        action='store_false',
-        default=True
+        action='store_true',
     )
 
     return parser.parse_args()
