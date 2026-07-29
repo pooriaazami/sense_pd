@@ -21,7 +21,9 @@ def train_epoch(backbone, d3dp, dataloader, optimizer, device):
         embeddings = backbone(seq)
         embeddings = transform_embedding(embeddings, mask)
         predicted_joints = d3dp(embeddings)
-
+        print('='*100)
+        print(predicted_joints.shape, embeddings.shape, seq.shape)
+        print('='*100)
         loss = loss_mpjpe(predicted_joints, seq)
 
         loss.backward()
