@@ -1,4 +1,5 @@
 experiment_name: 'Direct Finetunning'
+description: "Fine-tuning the pretrained 3D model with CategoricalOrdinalFocalLoss"
 
 model: 
   n_layers: 16

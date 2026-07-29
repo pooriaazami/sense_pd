@@ -42,6 +42,37 @@ def collate_fn(batch):
         'mask': torch.stack([item['mask'].detach() for item in batch])
     }
 
+def log_final_report(logs, writer):
+    accuracy, f1, recall, precision = [0] * 4
+
+    for key in logs.keys():
+        accuracy += logs[key]['accuracy']
+        f1 += logs[key]['f1']
+        recall += logs[key]['recall']
+        precision += logs[key]['precision']
+
+    num_datasets = len(logs.keys())
+    accuracy /= num_datasets
+    f1 /= num_datasets
+    recall /= num_datasets
+    precision /= num_datasets
+
+    report = F'Aggregation: f1: {f1:.2f}, accuracy: {accuracy:.2f}, recall: {recall:.2f}, precision: {precision:.2f}'
+    writer.add_text('Final Report', report)
+
+def initiate_writer(config):
+    dt = datetime.now()
+    name = f'{config.experiment_name}__{dt.month}_{dt.day}_{dt.hour}_{dt.minute}'
+
+    writer = SummaryWriter(os.path.join('assets', 'logs', name))
+
+    writer.add_text(
+        'Config Details',
+        str(config)
+    )
+
+    return writer
+
 def main():
     parser = argparse.ArgumentParser(description='This module trains the classifier model.')
 
@@ -54,23 +85,21 @@ def main():
 
     args = parser.parse_args()
     config = get_config(args.config)
-
-    dt = datetime.now()
-    name = f'{config.experiment_name}__{dt.month}_{dt.day}_{dt.hour}_{dt.minute}'
-    writer = SummaryWriter(os.path.join('assets', 'logs', name))
+    writer = initiate_writer(config)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     backbone = MotionAGFormer(**convert_params(config.model)).to(device)
 
     loss_fn = CategoricalOrdinalFocalLoss()
 
+    logs = {}
     for val_dataset_name in DATASETS:
         print(f'Val Dataset: {val_dataset_name}')
 
+        backbone = MotionAGFormer(**convert_params(config.model)).to(device)
+
         if config.backbone_path:
             backbone.load_state_dict(torch.load(config.backbone_path)())
-        else:
-            backbone = MotionAGFormer(**convert_params(config.model)).to(device)
 
         classifier = nn.Linear(config.model.dim_rep * config.data.num_joints, NUM_CLASSES).to(device)
         optimizer = optim.AdamW(chain(backbone.parameters(), classifier.parameters()), lr=config.training.lr)
@@ -90,7 +119,7 @@ def main():
                                     shuffle=True,
                                     collate_fn=collate_fn)
 
-        train_model(
+        val_log = train_model(
             train_dataloader,
             val_dataloader,
             backbone,
@@ -102,6 +131,10 @@ def main():
             device,
             val_dataset_name,
         )
+
+        logs[val_dataset_name] = val_log
+
+    log_final_report(logs, writer)
 
 if __name__ == '__main__':
     main()
