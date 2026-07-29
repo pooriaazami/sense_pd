@@ -1,0 +1,60 @@
+experiment_name: 'IntegratedTraining'
+
+description: "First Two Steps of the DPPD paper"
+
+model: 
+  n_layers: 16
+  dim_in: 3 
+  dim_feat: 128
+  dim_rep: 512
+  dim_out: 3
+  mlp_ratio: 4
+  act_layer: gelu
+  attn_drop: 0.1
+  drop: 0.1
+  drop_path: 0.1
+  use_layer_scale: True
+  layer_scale_init_value: 0.00001
+  use_adaptive_fusion: True
+  num_heads: 8
+  qkv_bias: False
+  qkv_scale: null
+  hierarchical: False
+  use_temporal_similarity: True # Only useful when use_tcn = False
+  neighbour_num: 2  # Only useful when use_temporal_similarity = True
+  temporal_connection_len: 1 # Only useful when use_tcn = False, use_temporal_similarity = False
+  use_tcn: False
+  graph_only: False
+  n_frames: 81
+
+dataset:
+  pretraining: 
+    path: datasets/preprocessed
+    test_size: .2
+  classification: datasets/CARE-PD/preprocessed/
+  num_joints: 17
+
+training:
+  pretraining:
+    lr: 0.0004
+    optimizer: adamw
+    batch_size: 8
+    lambda_motion: 1
+    joint_mask_ratio: 0.5
+    frame_mask_ratio: 0.5
+    epochs: 200
+    save_freq: 20
+
+  diffusion:
+    lr: 0.0004
+    optimizer: adamw
+    batch_size: 8
+    epochs: 200
+    save_freq: 20
+
+  classification:
+    lr: 0.0004
+    optimizer: adamw
+    batch_size: 8
+    epochs: 10
+    save_freq: 20

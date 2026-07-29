@@ -8,8 +8,8 @@ import pandas as pd
 from torch.utils.data import Dataset
 
 class Motion3DDataset(Dataset):
-    def __init__(self, dataset_root):
-        self.files = files = glob.glob(os.path.join(dataset_root, '*.pkl'))
+    def __init__(self, files):
+        self.files = files
 
     def __len__(self):
         return len(self.files)
