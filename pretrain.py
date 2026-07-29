@@ -16,7 +16,8 @@ from tqdm import tqdm
 from utils import get_config
 from models import MotionAGFormer
 from data import Motion3DDataset
-from train import motion_loss_fn, joints_loss_fn, RandomFrameMask, RandomJointMask
+from train import RandomFrameMask, RandomJointMask
+from utils import motion_loss_fn, joints_loss_fn
 
 def pretext_loss(predicted_joints, ground_truth, mask, lambd):
     motion_loss = motion_loss_fn(predicted_joints, ground_truth, mask)

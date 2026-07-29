@@ -85,7 +85,6 @@ class D3DP(nn.Module):
     def freeze_backbone(self):
         for param in self.backbone.parameters():
             param.requires_grad = False
-        print("[INFO - MotionEncoder] Backbone parameters are frozen")
         
     def predict_noise_from_start(self, x_t, t, x0):
         return (
@@ -190,8 +189,6 @@ class D3DP(nn.Module):
             time_cond = torch.full((batch,), time, dtype=torch.long).cuda()
             # self_cond = x_start if self.self_condition else None
 
-            #print("%d/%d" % (time, total_timesteps))
-
             preds = self.model_predictions_fliping(img, inputs_3d, input_3d_flip, time_cond)
             pred_noise, x_start = preds.pred_noise, preds.pred_x_start
 
@@ -228,7 +225,7 @@ class D3DP(nn.Module):
 
     def forward(self, input_3d, input_3d_flip=None):
         B,T,J,C = input_3d.shape
-        x = self.backbone(input_3d, return_rep=True)
+        x = self.backbone(input_3d)
         original_feat = x
         
         # preprare condition: [B, J, C] → flatten & proj → [B, 1, hidden]

@@ -3,3 +3,5 @@ from .loss import loss_mpjpe, n_mpjpe, loss_velocity_feat, \
     loss_angle_velocity
 
 from .CategoricalOrdinalFocalLoss import CategoricalOrdinalFocalLoss
+
+from .pretraining import joints_loss_fn, motion_loss_fn
