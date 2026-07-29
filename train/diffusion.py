@@ -15,8 +15,8 @@ def train_epoch(backbone, d3dp, dataloader, optimizer, device):
     for seq, mask in tqdm(dataloader):
         optimizer.zero_grad()
         
-        seq = seq.to(device)
-        mask = mask.to(device)
+        seq = seq.float().to(device)
+        mask = mask.float().to(device)
 
         embeddings = backbone(seq)
         embeddings = transform_embedding(embeddings, mask)
@@ -38,8 +38,8 @@ def validation_epoch(backbone, d3dp, dataloader, device):
     total_loss = 0
     with torch.no_grad():
         for seq, mask in tqdm(dataloader):
-            seq = seq.to(device)
-            mask = mask.to(device)
+            seq = seq.float().to(device)
+            mask = mask.float().to(device)
 
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
