@@ -21,6 +21,5 @@ def transform_embedding(embeddings, mask):
     embeddings = embeddings.permute(0, 2, 3, 1)
     mask = mask.unsqueeze(1).unsqueeze(1).float().to(embeddings.device)
     embeddings = (embeddings * mask).sum(dim=-1) / mask.sum(dim=-1).clamp(min=1e-6)
-    embeddings = embeddings.flatten(1)
 
     return embeddings
