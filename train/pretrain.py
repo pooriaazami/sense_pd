@@ -37,8 +37,10 @@ def train_epoch(
         joint_masked_embeddings = backbone(data_joint_masked)
         joint_masked_embeddings = transform_embedding(joint_masked_embeddings, mask)
         predicted_masked_joints = regressor(joint_masked_embeddings)
-    
-        joint_masked_loss, joint_masked_temporal_loss, joint_masked_reconstruction_loss = loss_fn(predicted_masked_joints, data, mask)
+        print('='*100)
+        print(predicted_masked_joints.shape, data.shape, joint_masked_embeddings.shape)
+        print('='*100)
+        joint_masked_loss, joint_masked_temporal_loss, joint_masked_reconstruction_loss = loss_fn(predicted_masked_joints, data)
         
         # Frame Masked
         data_frame_masked = random_frame_mask_fn(data)
@@ -46,7 +48,7 @@ def train_epoch(
         frame_masked_embeddings = transform_embedding(frame_masked_embeddings, mask)
         predicted_masked_frames = regressor(frame_masked_embeddings)
     
-        frame_masked_loss, frame_masked_temporal_loss, frame_masked_reconstruction_loss = loss_fn(predicted_masked_frames, data, mask)
+        frame_masked_loss, frame_masked_temporal_loss, frame_masked_reconstruction_loss = loss_fn(predicted_masked_frames, data)
 
         loss = joint_masked_loss + frame_masked_loss
         loss.backward()
@@ -102,7 +104,7 @@ def validation_epoch(
             joint_masked_embeddings = transform_embedding(joint_masked_embeddings, mask)
             predicted_masked_joints = regressor(joint_masked_embeddings)
         
-            joint_masked_loss, joint_masked_temporal_loss, joint_masked_reconstruction_loss = loss_fn(predicted_masked_joints, data, mask)
+            joint_masked_loss, joint_masked_temporal_loss, joint_masked_reconstruction_loss = loss_fn(predicted_masked_joints, data)
             
             # Frame Masked
             data_frame_masked = random_frame_mask_fn(data)
@@ -110,7 +112,7 @@ def validation_epoch(
             frame_masked_embeddings = transform_embedding(frame_masked_embeddings, mask)
             predicted_masked_frames = regressor(frame_masked_embeddings)
         
-            frame_masked_loss, frame_masked_temporal_loss, frame_masked_reconstruction_loss = loss_fn(predicted_masked_frames, data, mask)
+            frame_masked_loss, frame_masked_temporal_loss, frame_masked_reconstruction_loss = loss_fn(predicted_masked_frames, data)
 
             loss = joint_masked_loss + frame_masked_loss
 

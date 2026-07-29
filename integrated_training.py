@@ -47,9 +47,9 @@ def parse_args():
 
     return parser.parse_args()
 
-def pretext_loss(predicted_joints, ground_truth, mask, lambd):
-    motion_loss = motion_loss_fn(predicted_joints, ground_truth, mask)
-    joints_loss = joints_loss_fn(predicted_joints, ground_truth, mask)
+def pretext_loss(predicted_joints, ground_truth, lambd):
+    motion_loss = motion_loss_fn(predicted_joints, ground_truth)
+    joints_loss = joints_loss_fn(predicted_joints, ground_truth)
     
     return lambd * motion_loss + joints_loss, motion_loss, joints_loss
 
