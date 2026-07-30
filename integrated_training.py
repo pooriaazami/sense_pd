@@ -178,7 +178,7 @@ def main():
             out_features=3
         ).to(device)
 
-    if hasattr(config.checkpoints, 'backbone'):
+    if hasattr(config, 'checkpoints'):
         print('Loading pretrained backbone')
         backbone.load_state_dict(torch.load(config.checkpoints.backbone))
         regressor.load_state_dict(torch.load(config.checkpoints.regressor))
