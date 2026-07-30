@@ -9,9 +9,6 @@ from utils import mpjpe
 from .utils import transform_embedding
 
 def diffusion_loss(predicted_emneddings, embeddings, predicted_joints, seq):
-    print(predicted_emneddings.shape, embeddings.shape, predicted_joints.shape, seq.shape)
-    # loss_3d_first_frame = F.mse_loss(predicted_feat[:,0], original_feat[:,0])
-
     loss = mpjpe(predicted_joints, seq)
     loss += 1000 * F.mse_loss(predicted_emneddings[:, :, 0], embeddings[:, :, 0])
 
@@ -39,7 +36,6 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
         optimizer.step()
 
         total_loss += loss.detach().cpu().numpy().item()
-        break
 
     return {'loss': total_loss}
 
@@ -61,7 +57,6 @@ def validation_epoch(backbone, regressor, d3dp, dataloader, device):
             loss = diffusion_loss(predicted_emneddings, embeddings, predicted_joints, seq)
 
             total_loss += loss.detach().cpu().numpy().item()
-            break
 
     return {'loss': total_loss}
 

@@ -58,7 +58,6 @@ def train_epoch(
         total_frame_masked_loss += frame_masked_loss.detach().cpu().numpy().item()
 
         total_loss += loss.detach().cpu().numpy().item()
-        break
         
     return {
         'frame_masked': {
@@ -122,8 +121,6 @@ def validation_epoch(
 
             total_loss += loss.detach().cpu().numpy().item()
 
-            break
-        
     return {
         'frame_masked': {
             'temporal_loss': total_frame_masked_temporal_loss,
