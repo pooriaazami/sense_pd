@@ -171,7 +171,7 @@ class D3DP(nn.Module):
                   c * pred_noise + \
                   sigma * noise
 
-        return torch.stack(preds_all, dim=1)
+        return img
 
     @torch.no_grad()
     def ddim_sample_flip(self, inputs_3d, clip_denoised=True, do_postprocess=True, input_3d_flip=None):
@@ -213,7 +213,7 @@ class D3DP(nn.Module):
                   c * pred_noise + \
                   sigma * noise
 
-        return torch.stack(preds_all, dim=1)
+        return img #torch.stack(preds_all, dim=1)
 
     # forward diffusion
     def q_sample(self, x_start, t, noise=None):
