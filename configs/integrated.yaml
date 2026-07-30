@@ -71,5 +71,6 @@ training:
     epochs: 1
     save_freq: 1
 
-checkpoints:
-  backbone: assets/checkpoints/backbone_epoch_140.pth
+# checkpoints:
+#   backbone: assets/checkpoints/backbone_epoch_140.pth
+#   regressor: assets/checkpoints/regressor_epoch_140.pth

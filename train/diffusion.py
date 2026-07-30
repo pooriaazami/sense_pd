@@ -1,13 +1,23 @@
 import os
 
 import torch
+import torch.nn.functional as F
 
 from tqdm import tqdm
 
 from utils import mpjpe
 from .utils import transform_embedding
 
-def train_epoch(backbone, d3dp, dataloader, optimizer, device):
+def diffusion_loss(predicted_emneddings, embeddings, predicted_joints, seq):
+    print(predicted_emneddings.shape, embeddings.shape, predicted_joints.shape, seq.shape)
+    # loss_3d_first_frame = F.mse_loss(predicted_feat[:,0], original_feat[:,0])
+
+    loss = mpjpe(predicted_joints, seq)
+    loss += 1000 * F.mse_loss(predicted_emneddings[:, :, 0], embeddings[:, :, 0])
+
+    return loss
+
+def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
     backbone.train()
     d3dp.train()
 
@@ -20,17 +30,20 @@ def train_epoch(backbone, d3dp, dataloader, optimizer, device):
 
         embeddings = backbone(seq)
         embeddings = transform_embedding(embeddings, mask)
-        predicted_joints = d3dp(embeddings)
-        loss = mpjpe(predicted_joints, embeddings)
+        predicted_emneddings = d3dp(embeddings).squeeze(1)
+        predicted_joints = regressor(embeddings)
+
+        loss = diffusion_loss(predicted_emneddings, embeddings, predicted_joints, seq)
 
         loss.backward()
         optimizer.step()
 
         total_loss += loss.detach().cpu().numpy().item()
+        break
 
     return {'loss': total_loss}
 
-def validation_epoch(backbone, d3dp, dataloader, device):
+def validation_epoch(backbone, regressor, d3dp, dataloader, device):
     backbone.eval()
     d3dp.eval()
 
@@ -42,10 +55,13 @@ def validation_epoch(backbone, d3dp, dataloader, device):
 
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
-            predicted_joints = d3dp(embeddings).squeeze(1)
-            loss = mpjpe(predicted_joints, embeddings)
+            predicted_emneddings = d3dp(embeddings).squeeze(1)
+            predicted_joints = regressor(embeddings)
+
+            loss = diffusion_loss(predicted_emneddings, embeddings, predicted_joints, seq)
 
             total_loss += loss.detach().cpu().numpy().item()
+            break
 
     return {'loss': total_loss}
 
@@ -56,6 +72,7 @@ def update_log(writer, train_log, val_log, step):
     }, step)
 
 def train_diffusion_model(backbone, 
+                          regressor,
                           d3dp, 
                           train_dataloader, 
                           val_dataloader, 
@@ -65,8 +82,8 @@ def train_diffusion_model(backbone,
                           writer,
                           save_freq):
     for epoch in range(1, epochs+1):
-        train_log = train_epoch(backbone, d3dp, train_dataloader, optimizer, device)
-        val_log = validation_epoch(backbone, d3dp, val_dataloader, device)
+        train_log = train_epoch(backbone, regressor, d3dp, train_dataloader, optimizer, device)
+        val_log = validation_epoch(backbone, regressor, d3dp, val_dataloader, device)
 
         update_log(writer, train_log, val_log, epoch)
 

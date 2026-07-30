@@ -112,6 +112,7 @@ def freeze_model(model):
 
 def train_diffusion(config, 
                     backbone,
+                    regressor,
                     dim_rep, 
                     joints_left, 
                     joints_right, 
@@ -143,6 +144,7 @@ def train_diffusion(config,
     train_diffusion_model(
         backbone=backbone,
         d3dp=d3dp,
+        regressor=regressor,
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
         optimizer=optimizer,

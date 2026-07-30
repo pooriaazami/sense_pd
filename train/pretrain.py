@@ -58,6 +58,7 @@ def train_epoch(
         total_frame_masked_loss += frame_masked_loss.detach().cpu().numpy().item()
 
         total_loss += loss.detach().cpu().numpy().item()
+        break
         
     return {
         'frame_masked': {
@@ -120,6 +121,8 @@ def validation_epoch(
             total_frame_masked_loss += frame_masked_loss.detach().cpu().numpy().item()
 
             total_loss += loss.detach().cpu().numpy().item()
+
+            break
         
     return {
         'frame_masked': {
@@ -213,4 +216,4 @@ def pretrain(
 
         if epoch % save_freq == 0:
             torch.save(backbone.state_dict(), os.path.join('assets', 'checkpoints', f'backbone_epoch_{epoch}.pth'))
-            # torch.save(regressor.state_dict(), os.path.join('assets', 'checkpoints', f'regressor_epoch_{epoch}.pth'))
+            torch.save(regressor.state_dict(), os.path.join('assets', 'checkpoints', f'regressor_epoch_{epoch}.pth'))
