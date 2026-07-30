@@ -173,9 +173,16 @@ def main():
     convert_params(config.model)
     backbone = MotionAGFormer(**config.model).to(device)
 
-    if config.checkpoints.backbone:
+    regressor = nn.Linear(
+            in_features=config.model.dim_rep,
+            out_features=3
+        ).to(device)
+
+    if hasattr(config.checkpoints, 'backbone'):
         print('Loading pretrained backbone')
         backbone.load_state_dict(torch.load(config.checkpoints.backbone))
+        regressor.load_state_dict(torch.load(config.checkpoints.regressor))
+
 
     train_files, val_files = split_motion_files(
         config.dataset.pretraining.path, config.dataset.pretraining.test_size
@@ -195,10 +202,6 @@ def main():
                         shuffle=True
                     )
 
-    regressor = nn.Linear(
-        in_features=config.model.dim_rep,
-        out_features=3
-    ).to(device)
 
     pose_estimator = MixSTE2(
         num_frame=config.model.n_frames, 
@@ -232,6 +235,7 @@ def main():
         train_diffusion(
             config=config, 
             backbone=backbone,
+            regressor=regressor,
             dim_rep=config.model.dim_rep, 
             joints_left=joints_left, 
             joints_right=joints_right, 
