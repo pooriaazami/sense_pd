@@ -32,7 +32,7 @@ def train_epoch(backbone, d3dp, dataloader, optimizer, device):
 
 def validation_epoch(backbone, d3dp, dataloader, device):
     backbone.eval()
-    d3dp.train()
+    d3dp.eval()
 
     total_loss = 0
     with torch.no_grad():

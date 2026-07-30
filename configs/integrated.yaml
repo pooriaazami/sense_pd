@@ -58,7 +58,8 @@ training:
     save_freq: 20
 
   diffusion:
-    lr: 0.0004
+    lr: 0.001
+    weight_decay: 0.1
     optimizer: adamw
     epochs: 140
     save_freq: 20

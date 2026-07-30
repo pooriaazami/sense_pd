@@ -135,7 +135,10 @@ def train_diffusion(config,
         pose_estimator=pose_estimator,
     ).to(device)
 
-    optimizer = optim.AdamW(d3dp.parameters(), lr=config.training.diffusion.lr)
+    optimizer = optim.AdamW(d3dp.parameters(), 
+                            lr=config.training.diffusion.lr, 
+                            weight_decay=config.training.diffusion.weight_decay
+                        )
 
     train_diffusion_model(
         backbone=backbone,
