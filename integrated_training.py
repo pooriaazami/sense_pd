@@ -168,6 +168,7 @@ def main():
     backbone = MotionAGFormer(**config.model).to(device)
 
     if config.checkpoints.backbone:
+        print('Loading pretrained backbone')
         backbone.load_state_dict(torch.load(config.checkpoints.backbone))
 
     train_files, val_files = split_motion_files(
@@ -206,6 +207,7 @@ def main():
     ).to(device)
 
     if args.pretrain:
+        print('Training the backbone')
         pretrain_model(
             config=config, 
             backbone=backbone, 
@@ -217,6 +219,7 @@ def main():
         )
 
     if args.diffusion:
+        print('Traing the diffusion model')
         joints_left = [4, 5, 6, 11, 12, 13]
         joints_right = [1, 2, 3, 14, 15, 16]
 
