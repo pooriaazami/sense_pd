@@ -44,7 +44,7 @@ def validation_epoch(backbone, d3dp, dataloader, device):
             embeddings = transform_embedding(embeddings, mask)
             predicted_joints = d3dp(embeddings)
 
-            loss = loss_mpjpe(predicted_joints, embeddings)
+            loss = mpjpe(predicted_joints, embeddings)
 
             total_loss += loss.detach().cpu().numpy().item()
 
