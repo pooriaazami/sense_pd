@@ -228,12 +228,14 @@ class D3DP(nn.Module):
     def train(self, mode: bool = True):
         super().train(mode)
         self.pose_estimator.train()
+        self.is_train = True
 
         return self
 
     def eval(self):
         super().eval()
         self.pose_estimator.eval()
+        self.is_train = False
 
         return self
 

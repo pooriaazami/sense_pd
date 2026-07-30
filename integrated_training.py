@@ -167,6 +167,9 @@ def main():
     convert_params(config.model)
     backbone = MotionAGFormer(**config.model).to(device)
 
+    if config.checkpoints.backbone:
+        backbone.load_state_dict(torch.load(config.checkpoints.backbone))
+
     train_files, val_files = split_motion_files(
         config.dataset.pretraining.path, config.dataset.pretraining.test_size
     )

@@ -69,3 +69,6 @@ training:
     batch_size: 8
     epochs: 1
     save_freq: 1
+
+checkpoints:
+  backbone: assets/checkpoints/backbone_epoch_140.pth
