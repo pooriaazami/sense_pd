@@ -43,7 +43,7 @@ def validation_epoch(backbone, d3dp, dataloader, device):
 
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
-            predicted_joints = d3dp(embeddings)
+            predicted_joints = d3dp(embeddings).squeeze(1)
             print('='*50)
             print(predicted_joints.shape, embeddings.shape)
             print('='*50)
