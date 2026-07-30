@@ -4,7 +4,7 @@ import torch
 
 from tqdm import tqdm
 
-from utils import loss_mpjpe
+from utils import mpjpe
 from .utils import transform_embedding
 
 def train_epoch(backbone, d3dp, dataloader, optimizer, device):
@@ -21,7 +21,7 @@ def train_epoch(backbone, d3dp, dataloader, optimizer, device):
         embeddings = backbone(seq)
         embeddings = transform_embedding(embeddings, mask)
         predicted_joints = d3dp(embeddings)
-        loss = loss_mpjpe(predicted_joints, embeddings)
+        loss = mpjpe(predicted_joints, embeddings)
 
         loss.backward()
         optimizer.step()

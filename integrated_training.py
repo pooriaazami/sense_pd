@@ -121,6 +121,7 @@ def train_diffusion(config,
                     writer,
                     device,
                     save_freq):
+    
     freeze_model(backbone)
 
     d3dp = D3DP(

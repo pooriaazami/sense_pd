@@ -41,7 +41,7 @@ def mpjpe(predicted, target):
     often referred to as "Protocol #1" in many papers.
     """
     assert predicted.shape == target.shape
-    weight = [1,1,1,]
+    
     if isinstance(predicted, torch.Tensor):
         return torch.mean(torch.norm(predicted - target, dim=len(target.shape)-1))
     else:
