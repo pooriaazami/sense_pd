@@ -28,7 +28,7 @@ def train_epoch(dataloader, backbone, d3dp, classifier, loss_fn, optimizer, devi
         with torch.no_grad():
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
-            diffision_outputs = d3dp(embeddings).squeeze(1)
+            _, diffision_outputs = d3dp(embeddings).squeeze(1)
 
         preds = classifier(embeddings, diffision_outputs)
         loss = loss_fn(preds, label)
@@ -79,7 +79,7 @@ def validation_epoch(dataloader, backbone, d3dp, classifier, loss_fn, device):
 
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
-            diffision_outputs = d3dp(embeddings).squeeze(1)
+            _, diffision_outputs = d3dp(embeddings).squeeze(1)
 
             preds = classifier(embeddings, diffision_outputs)
             loss = loss_fn(preds, label)
