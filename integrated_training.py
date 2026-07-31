@@ -112,7 +112,8 @@ def pretrain_model(config, backbone, regressor, device, train_dataloader, val_da
         device=device,
         save_freq=config.training.pretraining.save_freq,
         writer=writer,
-        epochs=config.training.pretraining.epochs
+        epochs=config.training.pretraining.epochs,
+        save_path_root=config.save_path_root
     )
 
 def freeze_model(model):
@@ -146,7 +147,8 @@ def train_diffusion(config,
         epochs=config.training.diffusion.epochs,
         writer=writer,
         device=device,
-        save_freq=config.training.diffusion.save_freq
+        save_freq=config.training.diffusion.save_freq,
+        save_path_root=config.save_path_root
     )
 
 def convert_params(params):
@@ -261,6 +263,8 @@ def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     convert_params(config.model)
+    os.makedirs(config.save_path_root, exist_ok=True)   
+
     backbone = MotionAGFormer(**config.model).to(device)
 
     regressor = nn.Linear(

@@ -10,7 +10,7 @@ from .utils import transform_embedding
 
 def diffusion_loss(predicted_emneddings, embeddings, predicted_joints, seq):
     loss = mpjpe(predicted_joints, seq)
-    loss += 1000 * F.mse_loss(predicted_emneddings[:, :, 0], embeddings[:, :, 0])
+    loss += 1000 * F.mse_loss(predicted_emneddings, embeddings)
 
     return loss
 
@@ -75,7 +75,9 @@ def train_diffusion_model(backbone,
                           epochs, 
                           device, 
                           writer,
-                          save_freq):
+                          save_freq,
+                          save_path_root):
+    
     for epoch in range(1, epochs+1):
         train_log = train_epoch(backbone, regressor, d3dp, train_dataloader, optimizer, device)
         val_log = validation_epoch(backbone, regressor, d3dp, val_dataloader, device)
@@ -83,5 +85,5 @@ def train_diffusion_model(backbone,
         update_log(writer, train_log, val_log, epoch)
 
         if epoch % save_freq == 0:
-            torch.save(d3dp.state_dict(), os.path.join('assets', 'checkpoints', f'd3dp_epoch_{epoch}.pth'))
+            torch.save(d3dp.state_dict(), os.path.join(save_path_root, f'd3dp_epoch_{epoch}.pth'))
 

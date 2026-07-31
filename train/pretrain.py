@@ -179,7 +179,8 @@ def pretrain(
         epochs, 
         device, 
         writer,
-        save_freq
+        save_freq,
+        save_path_root
     ):
 
     for epoch in range(1, epochs + 1):
@@ -212,5 +213,5 @@ def pretrain(
         )
 
         if epoch % save_freq == 0:
-            torch.save(backbone.state_dict(), os.path.join('assets', 'checkpoints', f'backbone_epoch_{epoch}.pth'))
-            torch.save(regressor.state_dict(), os.path.join('assets', 'checkpoints', f'regressor_epoch_{epoch}.pth'))
+            torch.save(backbone.state_dict(), os.path.join(save_path_root, f'backbone_epoch_{epoch}.pth'))
+            torch.save(regressor.state_dict(), os.path.join(save_path_root, f'regressor_epoch_{epoch}.pth'))

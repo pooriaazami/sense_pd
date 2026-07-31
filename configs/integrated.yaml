@@ -1,6 +1,6 @@
 experiment_name: 'IntegratedTraining'
 
-description: "First Two Steps of the DPPD paper"
+description: "Complete Training Pipeline of the DPPD paper"
 
 model: 
   n_layers: 16
@@ -59,14 +59,14 @@ training:
     lambda_motion: 1
     joint_mask_ratio: 0.5
     frame_mask_ratio: 0.5
-    epochs: 60
+    epochs: 80
     save_freq: 20
 
   diffusion:
     lr: 0.001
     weight_decay: 0.1
     optimizer: adamw
-    epochs: 60
+    epochs: 80
     save_freq: 20
 
   classification:
@@ -78,3 +78,5 @@ checkpoints:
   backbone: assets/checkpoints/backbone_epoch_60.pth
   regressor: assets/checkpoints/regressor_epoch_60.pth
   d3dp: assets/checkpoints/d3dp_epoch_60.pth
+
+save_path_root = 'v2'
