@@ -126,8 +126,8 @@ def train_diffusion(config,
                     train_dataloader,
                     val_dataloader,
                     writer,
-                    device,
-                    save_freq):
+                    device
+                ):
     
     freeze_model(backbone)
 
@@ -146,7 +146,7 @@ def train_diffusion(config,
         epochs=config.training.diffusion.epochs,
         writer=writer,
         device=device,
-        save_freq=save_freq
+        save_freq=config.training.diffusion.save_freq
     )
 
 def convert_params(params):
@@ -313,20 +313,21 @@ def main():
     ).to(device)
 
     if hasattr(config, 'checkpoints'):
-        if hasattr(config.checkpoints.backbone):
+        if hasattr(config.checkpoints, 'backbone'):
             print('Loading pretrained backbone')
             backbone.load_state_dict(torch.load(config.checkpoints.backbone))
 
-        if hasattr(config.checkpoints.regressor):
+        if hasattr(config.checkpoints, 'regressor'):
             print('Loading pretrained regressor')
             regressor.load_state_dict(torch.load(config.checkpoints.regressor))
 
-        if hasattr(config.checkpoints.d3dp):
+        if hasattr(config.checkpoints, 'd3dp'):
             print('Loading pretrained d3dp')
             d3dp.load_state_dict(torch.load(config.checkpoints.d3dp))
 
     if args.pretrain:
         print('Training the backbone')
+
         pretrain_model(
             config=config, 
             backbone=backbone, 
@@ -349,10 +350,11 @@ def main():
             val_dataloader=val_dataloader,
             writer=writer,
             device=device,
-            save_freq=config.training.diffusion.save_freq
         )
 
     if args.classifier:
+        print('Training the classifier')
+
         logs = train_LODO_classifier(
             config=config,
             backbone=backbone, 
@@ -360,6 +362,7 @@ def main():
             writer=writer,
             device=device
         )
+
         log_final_report(logs, writer)
 
 if __name__ == '__main__':
