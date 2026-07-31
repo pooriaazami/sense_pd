@@ -39,7 +39,6 @@ def train_epoch(dataloader, backbone, d3dp, classifier, loss_fn, optimizer, devi
         total_loss += loss.detach().cpu().numpy().item()
         preds_log.extend(preds.argmax(1).detach().cpu().tolist())
         labels_log.extend(label.cpu().tolist())
-        break
 
     accuracy = accuracy_score(labels_log, preds_log)
     f1 = f1_score(labels_log, preds_log, average='macro')
@@ -88,8 +87,6 @@ def validation_epoch(dataloader, backbone, d3dp, classifier, loss_fn, device):
             total_loss += loss.detach().cpu().numpy().item()
             preds_log.extend(preds.argmax(1).detach().cpu().tolist())
             labels_log.extend(label.cpu().tolist())
-
-            break
 
     accuracy = accuracy_score(labels_log, preds_log)
     f1 = f1_score(labels_log, preds_log, average='macro')
