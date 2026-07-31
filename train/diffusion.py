@@ -36,7 +36,6 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
         optimizer.step()
 
         total_loss += loss.detach().cpu().numpy().item()
-        break
 
     return {'loss': total_loss}
 
@@ -59,7 +58,6 @@ def validation_epoch(backbone, regressor, d3dp, dataloader, device):
             loss = diffusion_loss(predicted_emneddings, noisy_embeddings, predicted_joints, seq)
 
             total_loss += loss.detach().cpu().numpy().item()
-            break
 
     return {'loss': total_loss}
 
