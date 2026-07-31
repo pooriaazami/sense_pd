@@ -27,7 +27,8 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
 
         embeddings = backbone(seq)
         embeddings = transform_embedding(embeddings, mask)
-        noisy_embeddings, predicted_emneddings = d3dp(embeddings).squeeze(1)
+        noisy_embeddings, predicted_emneddings = d3dp(embeddings)
+        predicted_joints = predicted_emneddings.squeeze(1)
         predicted_joints = regressor(predicted_emneddings)
 
         loss = diffusion_loss(predicted_emneddings, noisy_embeddings, predicted_joints, seq)
@@ -51,7 +52,8 @@ def validation_epoch(backbone, regressor, d3dp, dataloader, device):
 
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
-            noisy_embeddings, predicted_emneddings = d3dp(embeddings).squeeze(1)
+            noisy_embeddings, predicted_emneddings = d3dp(embeddings)
+            predicted_joints = predicted_emneddings.squeeze(1)
             predicted_joints = regressor(predicted_emneddings)
 
             loss = diffusion_loss(predicted_emneddings, noisy_embeddings, predicted_joints, seq)
