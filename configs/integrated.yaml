@@ -79,4 +79,4 @@ checkpoints:
   regressor: assets/checkpoints/regressor_epoch_60.pth
   d3dp: assets/checkpoints/d3dp_epoch_60.pth
 
-save_path_root = 'v2'
+save_path_root: 'v2'
