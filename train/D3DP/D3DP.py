@@ -241,24 +241,43 @@ class D3DP(nn.Module):
 
     def forward(self, features, input_3d_flip=None):
         B = features.shape[0]
-        
-        # preprare condition: [B, J, C] → flatten & proj → [B, 1, hidden]
-        x_cond = features[:,0]
+
+        # Prepare condition: [B, F, J, C] -> first frame -> projection
+        x_cond = features[:, 0]
         cond = self.condition_proj(
-            x_cond.reshape(B * self.num_joints, -1)).reshape(B, 1, self.num_joints,-1)
-        
-        # Prepare Proposals.
+            x_cond.reshape(B * self.num_joints, -1)
+        ).reshape(B, 1, self.num_joints, -1)
+
         if self.is_train:
-            x_poses, _, t = self.prepare_targets(features)
-            x_poses = x_poses.float()
+            # x_t (noisy), noise, timestep
+            noisy_features, _, t = self.prepare_targets(features)
+            noisy_features = noisy_features.float()
             t = t.squeeze(-1)
 
-            return x_poses, self.pose_estimator(x_poses, t, cond)
+            # predict x_0
+            predicted_features = self.pose_estimator(
+                noisy_features,
+                t,
+                cond
+            )
+
+            # Return everything needed for training
+            return noisy_features, predicted_features
+
         else:
             if self.flip:
-                return self.ddim_sample_flip(features, input_3d_flip=input_3d_flip)
+                predicted_features = self.ddim_sample_flip(
+                    features,
+                    input_3d_flip=input_3d_flip
+                )
             else:
-                return self.ddim_sample(features, cond)
+                predicted_features = self.ddim_sample(
+                    features,
+                    cond
+                )
+
+            # Return the original clean embeddings and the denoised predictions
+            return features, predicted_features
 
     def prepare_diffusion_concat(self, pose_3d):
 
