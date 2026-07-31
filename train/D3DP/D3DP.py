@@ -253,7 +253,7 @@ class D3DP(nn.Module):
             x_poses = x_poses.float()
             t = t.squeeze(-1)
 
-            return self.pose_estimator(x_poses, t, cond)
+            return x_poses, self.pose_estimator(x_poses, t, cond)
         else:
             if self.flip:
                 return self.ddim_sample_flip(features, input_3d_flip=input_3d_flip)
