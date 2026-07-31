@@ -27,6 +27,10 @@ model:
   graph_only: False
   n_frames: 81
 
+classifier:
+  hidden_dim: 256
+  dropout_rate: 0.2
+
 mix2set:
   cs: 512
   dep: 8
@@ -37,6 +41,7 @@ dataset:
     test_size: .2
   classification: datasets/CARE-PD/preprocessed/
   num_joints: 17
+  num_classes: 4
 
 training:
   batch_size: 8
@@ -71,6 +76,7 @@ training:
     epochs: 1
     save_freq: 1
 
-# checkpoints:
-#   backbone: assets/checkpoints/backbone_epoch_140.pth
-#   regressor: assets/checkpoints/regressor_epoch_140.pth
+checkpoints:
+  backbone: assets/checkpoints/backbone_epoch_60.pth
+  regressor: assets/checkpoints/regressor_epoch_60.pth
+  d3dp: assets/checkpoints/d3dp_epoch_60.pth

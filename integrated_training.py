@@ -15,13 +15,17 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from utils import get_config
-from models import MotionAGFormer, MixSTE2
-from data import Motion3DDataset
+from models import MotionAGFormer, MixSTE2, Classifier
+from data import Motion3DDataset, CarePDDataset
 from train import RandomFrameMask, RandomJointMask, D3DP
-from utils import motion_loss_fn, joints_loss_fn
+from utils import motion_loss_fn, joints_loss_fn, CategoricalOrdinalFocalLoss
 
 from train.pretrain import pretrain
 from train.diffusion import train_diffusion_model
+from train.classification import train_model as train_classifier
+
+NUM_CLASSES = 4
+DATASETS = ['3DGait', 'BMCLab', 'PD-GaM', 'T-SDU-PD']
 
 def parse_args():
     parser = argparse.ArgumentParser(description='This module trains the classifier model.')
@@ -40,6 +44,11 @@ def parse_args():
 
     parser.add_argument(
         '--diffusion',
+        action='store_true',
+    )
+
+    parser.add_argument(
+        '--classifier',
         action='store_true',
     )
 
@@ -113,10 +122,7 @@ def freeze_model(model):
 def train_diffusion(config, 
                     backbone,
                     regressor,
-                    dim_rep, 
-                    joints_left, 
-                    joints_right, 
-                    pose_estimator,
+                    d3dp,
                     train_dataloader,
                     val_dataloader,
                     writer,
@@ -124,17 +130,6 @@ def train_diffusion(config,
                     save_freq):
     
     freeze_model(backbone)
-
-    d3dp = D3DP(
-        **config.training.d3dp,
-        joints_left=joints_left, 
-        joints_right=joints_right, 
-        num_proposals=1, 
-        sampling_timesteps=1, 
-        dim_rep=dim_rep,
-        num_joints=config.dataset.num_joints, 
-        pose_estimator=pose_estimator,
-    ).to(device)
 
     optimizer = optim.AdamW(d3dp.parameters(), 
                             lr=config.training.diffusion.lr, 
@@ -163,6 +158,101 @@ def convert_params(params):
     params.act_layer = act_mapper[params.act_layer]
     return params
 
+def collate_fn(batch):
+    """
+    Collate function to stack data from the SlicedPDDataset into batches.
+    
+    Args:
+        batch: A list of dictionaries returned by __getitem__.
+    """
+    # Use default_collate logic, but explicitly handle the dictionary keys
+    # print(batch)
+    return {
+        'seq': torch.stack([item['seq'].detach() for item in batch]),
+        'label': torch.stack([item['label'].detach() for item in batch]),
+        'mask': torch.stack([item['mask'].detach() for item in batch])
+    }
+
+def train_LODO_classifier(
+                    config,
+                    backbone, 
+                    d3dp, 
+                    writer,
+                    device
+                ):
+
+    freeze_model(backbone)
+    freeze_model(d3dp)
+
+    logs = {}
+    for val_dataset_name in DATASETS:
+        print(f'Val Dataset: {val_dataset_name}')
+
+        classifier = Classifier(
+            num_joints=config.dataset.num_joints,
+            seq_length=config.model.n_frames,
+            rep_dim=config.model.dim_rep,
+            hidden_dim=config.classifier.hidden_dim,
+            num_classes=config.dataset.num_classes,
+            dropout_rate=config.classifier.dropout_rate,
+        ).to(device)
+
+        optimizer = optim.AdamW(classifier.parameters(), 
+                                lr=config.training.classification.lr)
+
+        train_datasets = DATASETS.copy()
+        train_datasets.remove(val_dataset_name)
+
+        train_dataset = CarePDDataset(config.dataset.classification, train_datasets)
+        val_dataset = CarePDDataset(config.dataset.classification, [val_dataset_name])
+
+        train_dataloader = DataLoader(train_dataset, 
+                                    batch_size=config.training.batch_size, 
+                                    shuffle=True,
+                                    collate_fn=collate_fn)
+        val_dataloader = DataLoader(val_dataset, 
+                                    batch_size=config.training.batch_size, 
+                                    shuffle=True,
+                                    collate_fn=collate_fn)
+
+        loss_fn = CategoricalOrdinalFocalLoss()
+
+        val_log = train_classifier(
+            train_dataloader=train_dataloader,
+            val_dataloader=val_dataloader,
+            backbone=backbone,
+            d3dp=d3dp,
+            classifier=classifier,
+            loss_fn=loss_fn,
+            optimizer=optimizer,
+            epochs=config.training.classification.epochs,
+            log_writer=writer,
+            device=device,
+            dataset_name=val_dataset_name,
+        )
+
+        logs[val_dataset_name] = val_log
+
+    return logs
+
+def log_final_report(logs, writer):
+    accuracy, f1, recall, precision = [0] * 4
+
+    for key in logs.keys():
+        accuracy += logs[key]['accuracy']
+        f1 += logs[key]['f1']
+        recall += logs[key]['recall']
+        precision += logs[key]['precision']
+
+    num_datasets = len(logs.keys())
+    accuracy /= num_datasets
+    f1 /= num_datasets
+    recall /= num_datasets
+    precision /= num_datasets
+
+    report = F'Aggregation: f1: {f1:.2f}, accuracy: {accuracy:.2f}, recall: {recall:.2f}, precision: {precision:.2f}'
+    writer.add_text('Final Report', report)
+
 def main():
     args = parse_args()
     config = get_config(args.config)
@@ -177,12 +267,6 @@ def main():
             in_features=config.model.dim_rep,
             out_features=3
         ).to(device)
-
-    if hasattr(config, 'checkpoints'):
-        print('Loading pretrained backbone')
-        backbone.load_state_dict(torch.load(config.checkpoints.backbone))
-        regressor.load_state_dict(torch.load(config.checkpoints.regressor))
-
 
     train_files, val_files = split_motion_files(
         config.dataset.pretraining.path, config.dataset.pretraining.test_size
@@ -202,7 +286,6 @@ def main():
                         shuffle=True
                     )
 
-
     pose_estimator = MixSTE2(
         num_frame=config.model.n_frames, 
         num_joints=config.dataset.num_joints, 
@@ -214,6 +297,33 @@ def main():
         qkv_bias=config.model.qkv_bias, 
         qk_scale=config.model.qkv_scale,
     ).to(device)
+
+    joints_left = [4, 5, 6, 11, 12, 13]
+    joints_right = [1, 2, 3, 14, 15, 16]
+
+    d3dp = D3DP(
+        **config.training.d3dp,
+        joints_left=joints_left, 
+        joints_right=joints_right, 
+        num_proposals=1, 
+        sampling_timesteps=1, 
+        dim_rep=config.model.dim_rep,
+        num_joints=config.dataset.num_joints, 
+        pose_estimator=pose_estimator,
+    ).to(device)
+
+    if hasattr(config, 'checkpoints'):
+        if hasattr(config.checkpoints.backbone):
+            print('Loading pretrained backbone')
+            backbone.load_state_dict(torch.load(config.checkpoints.backbone))
+
+        if hasattr(config.checkpoints.regressor):
+            print('Loading pretrained regressor')
+            regressor.load_state_dict(torch.load(config.checkpoints.regressor))
+
+        if hasattr(config.checkpoints.d3dp):
+            print('Loading pretrained d3dp')
+            d3dp.load_state_dict(torch.load(config.checkpoints.d3dp))
 
     if args.pretrain:
         print('Training the backbone')
@@ -229,23 +339,28 @@ def main():
 
     if args.diffusion:
         print('Traing the diffusion model')
-        joints_left = [4, 5, 6, 11, 12, 13]
-        joints_right = [1, 2, 3, 14, 15, 16]
 
         train_diffusion(
             config=config, 
             backbone=backbone,
             regressor=regressor,
-            dim_rep=config.model.dim_rep, 
-            joints_left=joints_left, 
-            joints_right=joints_right, 
-            pose_estimator=pose_estimator,
+            d3dp=d3dp,
             train_dataloader=train_dataloader,
             val_dataloader=val_dataloader,
             writer=writer,
             device=device,
             save_freq=config.training.diffusion.save_freq
         )
+
+    if args.classifier:
+        logs = train_LODO_classifier(
+            config=config,
+            backbone=backbone, 
+            d3dp=d3dp, 
+            writer=writer,
+            device=device
+        )
+        log_final_report(logs, writer)
 
 if __name__ == '__main__':
     main()

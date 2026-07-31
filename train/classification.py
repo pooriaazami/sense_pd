@@ -9,8 +9,9 @@ from tqdm import tqdm
 
 from .utils import transform_embedding
 
-def train_epoch(dataloader, backbone, classifier, loss_fn, optimizer, device):
-    backbone.train()
+def train_epoch(dataloader, backbone, d3dp, classifier, loss_fn, optimizer, device):
+    backbone.eval()
+    d3dp.eval()
     classifier.train()
 
     total_loss = 0.
@@ -24,10 +25,12 @@ def train_epoch(dataloader, backbone, classifier, loss_fn, optimizer, device):
         mask = data['mask'].to(device)
         label = data['label'].to(device).squeeze()
 
-        embeddings = backbone(seq)
-        embeddings = transform_embedding(embeddings, mask)
+        with torch.no_grad():
+            embeddings = backbone(seq)
+            embeddings = transform_embedding(embeddings, mask)
+            diffision_outputs = d3dp(embeddings)
 
-        preds = classifier(embeddings)
+        preds = classifier(embeddings, diffision_outputs)
         loss = loss_fn(preds, label)
 
         loss.backward()
@@ -36,6 +39,7 @@ def train_epoch(dataloader, backbone, classifier, loss_fn, optimizer, device):
         total_loss += loss.detach().cpu().numpy().item()
         preds_log.extend(preds.argmax(1).detach().cpu().tolist())
         labels_log.extend(label.cpu().tolist())
+        break
 
     accuracy = accuracy_score(labels_log, preds_log)
     f1 = f1_score(labels_log, preds_log, average='macro')
@@ -59,8 +63,9 @@ def train_epoch(dataloader, backbone, classifier, loss_fn, optimizer, device):
     }
 
 
-def validation_epoch(dataloader, backbone, classifier, loss_fn, device):
+def validation_epoch(dataloader, backbone, d3dp, classifier, loss_fn, device):
     backbone.eval()
+    d3dp.eval()
     classifier.eval()
 
     total_loss = 0.
@@ -75,13 +80,16 @@ def validation_epoch(dataloader, backbone, classifier, loss_fn, device):
 
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
+            diffision_outputs = d3dp(embeddings)
 
-            preds = classifier(embeddings)
+            preds = classifier(embeddings, diffision_outputs)
             loss = loss_fn(preds, label)
 
             total_loss += loss.detach().cpu().numpy().item()
             preds_log.extend(preds.argmax(1).detach().cpu().tolist())
             labels_log.extend(label.cpu().tolist())
+
+            break
 
     accuracy = accuracy_score(labels_log, preds_log)
     f1 = f1_score(labels_log, preds_log, average='macro')
@@ -105,51 +113,38 @@ def validation_epoch(dataloader, backbone, classifier, loss_fn, device):
     }
 
 def log_to_tensorboard(writer, step, log, dataset, label):
-    writer.add_scalar(f'{dataset}/Loss/{label}', log['loss'], step)
-    writer.add_scalar(f'{dataset}/Accuracy/{label}', log['accuracy'], step)
-    writer.add_scalar(f'{dataset}/F1/{label}', log['f1'], step)
-    writer.add_scalar(f'{dataset}/Recall/{label}', log['recall'], step)
-    writer.add_scalar(f'{dataset}/Rrecision/{label}', log['recall'], step)
+    writer.add_scalar(f'Classifier/{dataset}/Loss/{label}', log['loss'], step)
+    writer.add_scalar(f'Classifier/{dataset}/Accuracy/{label}', log['accuracy'], step)
+    writer.add_scalar(f'Classifier/{dataset}/F1/{label}', log['f1'], step)
+    writer.add_scalar(f'Classifier/{dataset}/Recall/{label}', log['recall'], step)
+    writer.add_scalar(f'Classifier/{dataset}/Rrecision/{label}', log['recall'], step)
 
     writer.add_figure(
-        f'{dataset}/Confusion Matrix/{label}',
+        f'Classifier/{dataset}/Confusion Matrix/{label}',
         log['confusion_matrix'].figure_,
         global_step=step,
     )
 
     plt.close(log['confusion_matrix'].figure_)
 
-def freeze_model(model):
-    for param in model.parameters():
-        param.requires_grad_(False)
-
-def unfreeze_model(model):
-    for param in model.parameters():
-        param.requires_grad_(True)
-
 def train_model(train_dataloader, 
                 val_dataloader, 
                 backbone, 
+                d3dp,
                 classifier, 
                 loss_fn, 
                 optimizer, 
                 epochs, 
                 log_writer,
                 device,
-                dataset_name,
-                *, 
-                train_backbone=True):
-
-    if not train_backbone:
-        freeze_model(backbone)
-    else:
-        unfreeze_model(backbone)
-
+                dataset_name
+            ):
+    
     for epoch in range(1, epochs + 1):
-        train_log = train_epoch(train_dataloader, backbone, classifier, loss_fn, optimizer, device)
+        train_log = train_epoch(train_dataloader, backbone, d3dp, classifier, loss_fn, optimizer, device)
         log_to_tensorboard(log_writer, epoch, train_log, dataset_name,'train')
 
-        val_log = validation_epoch(val_dataloader, backbone, classifier, loss_fn, device)
+        val_log = validation_epoch(val_dataloader, backbone, d3dp, classifier, loss_fn, device)
         log_to_tensorboard(log_writer, epoch, val_log, dataset_name, 'val')
 
     return val_log
