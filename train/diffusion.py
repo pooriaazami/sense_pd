@@ -11,9 +11,9 @@ from .utils import transform_embedding
 def diffusion_loss(noise, predicted_noise, seq, predicted_joints):
     term1 = mpjpe(predicted_joints, seq)
     term2 = F.l1_loss(noise, predicted_noise)
-    term3 = 1000 * F.l1_loss(seq[:, 0, :, :], predicted_joints[:, 0, :, :])
+    term3 = F.l1_loss(seq[:, 0, :, :], predicted_joints[:, 0, :, :])
 
-    return term1 + term2 + 1000 * term3, term1, term2, term3
+    return term1 + term2 + term3, term1, term2, term3
 
 def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
     backbone.train()
