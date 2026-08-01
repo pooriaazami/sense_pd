@@ -10,8 +10,8 @@ from .utils import transform_embedding
 
 def diffusion_loss(noise, predicted_noise, seq, predicted_joints):
     term1 = mpjpe(predicted_joints, seq)
-    term2 = F.mse_loss(noise, predicted_noise)
-    term3 = 1000 * F.mse_loss(seq[:, 0, :, :], predicted_joints[:, 0, :, :])
+    term2 = F.huber_loss(noise, predicted_noise)
+    term3 = 1000 * F.huber_loss(seq[:, 0, :, :], predicted_joints[:, 0, :, :])
 
     return term1 + term2 + 1000 * term3, term1, term2, term3
 
