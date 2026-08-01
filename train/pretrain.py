@@ -42,7 +42,6 @@ def train_epoch(
         frame_masked_embeddings = backbone(data_frame_masked)
         frame_masked_embeddings = transform_embedding(frame_masked_embeddings, mask)
         predicted_masked_frames = regressor(frame_masked_embeddings)
-    
         frame_masked_loss, frame_masked_temporal_loss, frame_masked_reconstruction_loss = loss_fn(predicted_masked_frames, data)
 
         loss = joint_masked_loss + frame_masked_loss

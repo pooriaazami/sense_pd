@@ -28,8 +28,7 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
 
         embeddings = backbone(seq)
         embeddings = transform_embedding(embeddings, mask)
-        noise, predicted_noise = d3dp(embeddings)
-        predicted_embeddings = embeddings - predicted_noise
+        noise, predicted_noise, predicted_embeddings = d3dp(embeddings)
         predicted_joints = regressor(predicted_embeddings)
 
         loss, mjpe_val, noise_prediction_val, first_frame_val = diffusion_loss(noise, predicted_noise, seq, predicted_joints)

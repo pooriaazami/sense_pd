@@ -156,7 +156,7 @@ class  MixSTE2(nn.Module):
             x_cond = x_cond.unsqueeze(dim=1)
         
         x = x_3d + x_cond
-        x = self.STE_forward(x_3d, t)
+        x = self.STE_forward(x, t)
 
         x = self.TTE_foward(x)
 

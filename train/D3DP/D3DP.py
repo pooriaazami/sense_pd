@@ -187,15 +187,22 @@ class D3DP(nn.Module):
             noisy_features = noisy_features.float()
             t = t.squeeze(-1)
 
-            # predict x_0
-            predicted_noise = self.pose_estimator(
+            # predict x_0 in normalized embedding space
+            predicted_x_start = self.pose_estimator(
                 noisy_features,
                 t,
                 cond
             )
 
+            # convert predicted x_0 back to predicted noise for diffusion loss
+            predicted_noise = self.predict_noise_from_start(
+                noisy_features,
+                t,
+                predicted_x_start
+            )
+
             # Return everything needed for training
-            return noise, predicted_noise
+            return noise, predicted_noise, predicted_x_start
 
         else:
             predicted_features = self.ddim_sample(

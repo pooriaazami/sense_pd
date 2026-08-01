@@ -130,6 +130,7 @@ def train_diffusion(config,
                 ):
     
     freeze_model(backbone)
+    freeze_model(regressor)
 
     optimizer = optim.AdamW(d3dp.parameters(), 
                             lr=config.training.diffusion.lr, 
