@@ -41,6 +41,7 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
         total_mjpe += mjpe_val.detach().cpu().numpy().item()
         total_noise_prediction += noise_prediction_val.detach().cpu().numpy().item()
         total_first_frame += first_frame_val.detach().cpu().numpy().item()
+        break
 
     return {
         'total_loss': total_loss,
@@ -50,10 +51,10 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
     }
 
 def update_log(writer, train_log, step):
-    writer.add_scalar(f'Diffusion/Loss/', train_log['total_loss'], step)
-    writer.add_scalar(f'Diffusion/Loss/', train_log['mpje'], step)
-    writer.add_scalar(f'Diffusion/Loss/', train_log['noise_prediction'], step)
-    writer.add_scalar(f'Diffusion/Loss/', train_log['first_frame'], step)
+    writer.add_scalar(f'Diffusion/TotalLoss/', train_log['total_loss'], step)
+    writer.add_scalar(f'Diffusion/MPJE/', train_log['mpje'], step)
+    writer.add_scalar(f'Diffusion/NoisePrediction/', train_log['noise_prediction'], step)
+    writer.add_scalar(f'Diffusion/FirstFrame/', train_log['first_frame'], step)
 
 def train_diffusion_model(backbone, 
                           regressor,
