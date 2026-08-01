@@ -88,21 +88,19 @@ class D3DP(nn.Module):
         self.condition_proj = nn.Linear(dim_rep, dim_rep)
         self.pose_estimator = pose_estimator
 
-    def predict_noise_from_start(self, x_t, t, x0):
+    def predict_start_from_noise(self, x_t, t, noise):
         return (
-                (extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - x0) /
-                extract(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape)
+                extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t -
+                extract(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape) * noise
         )
 
     def model_predictions(self, x, t, x_cond):
-        x_t = torch.clamp(x, min=-1.1 * self.scale, max=1.1*self.scale)
+        x_t = torch.clamp(x, min=-1.1 * self.scale, max=1.1 * self.scale)
         x_t = x_t / self.scale
-        pred_pose = self.pose_estimator(x_t, t, x_cond)
+        pred_noise = self.pose_estimator(x_t, t, x_cond)
 
-        x_start = pred_pose
-        x_start = x_start * self.scale
-        x_start = torch.clamp(x_start, min=-1.1 * self.scale, max=1.1*self.scale)
-        pred_noise = self.predict_noise_from_start(x, t, x_start)
+        x_start = self.predict_start_from_noise(x_t, t, pred_noise)
+        x_start = torch.clamp(x_start, min=-1.1, max=1.1)
 
         return ModelPrediction(pred_noise, x_start)
 
@@ -187,21 +185,19 @@ class D3DP(nn.Module):
             noisy_features = noisy_features.float()
             t = t.squeeze(-1)
 
-            # predict x_0 in normalized embedding space
-            predicted_x_start = self.pose_estimator(
+            # predict noise directly in normalized embedding space
+            predicted_noise = self.pose_estimator(
                 noisy_features,
                 t,
                 cond
             )
 
-            # convert predicted x_0 back to predicted noise for diffusion loss
-            predicted_noise = self.predict_noise_from_start(
+            predicted_x_start = self.predict_start_from_noise(
                 noisy_features,
                 t,
-                predicted_x_start
+                predicted_noise
             )
 
-            # Return everything needed for training
             return noise, predicted_noise, predicted_x_start
 
         else:
@@ -227,6 +223,7 @@ class D3DP(nn.Module):
 
         # Sample noise with same shape as input
         noise = torch.randn_like(targets)
+        normalized_noise = noise / self.scale
 
         # Scale clean data
         x_start = targets * self.scale
@@ -247,4 +244,4 @@ class D3DP(nn.Module):
 
         x = x / self.scale
 
-        return x, noise, t
+        return x, normalized_noise, t
