@@ -41,7 +41,6 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
         total_mjpe += mjpe_val.detach().cpu().numpy().item()
         total_noise_prediction += noise_prediction_val.detach().cpu().numpy().item()
         total_first_frame += first_frame_val.detach().cpu().numpy().item()
-        break
 
     return {
         'total_loss': total_loss,
