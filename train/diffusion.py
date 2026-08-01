@@ -11,7 +11,7 @@ from .utils import transform_embedding
 def diffusion_loss(noise, predicted_noise, seq, predicted_joints):
     loss = mpjpe(predicted_joints, seq)
     loss += F.mse_loss(noise, predicted_noise)
-    loss += 1000 * F.mse_loss(noise[:, 0, :, :] - predicted_noise[:, 0;, :, :])
+    loss += 1000 * F.mse_loss(noise[:, 0, :, :] - predicted_noise[:, 0, :, :])
 
     return loss
 
