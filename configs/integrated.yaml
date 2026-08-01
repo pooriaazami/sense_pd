@@ -66,13 +66,13 @@ training:
     lr: 0.001
     weight_decay: 0.1
     optimizer: adamw
-    epochs: 80
-    save_freq: 20
+    epochs: 1
+    save_freq: 1
 
   classification:
     lr: 0.0004
     optimizer: adamw
-    epochs: 10
+    epochs: 1
 
 checkpoints:
   backbone: assets/checkpoints/backbone_epoch_60.pth

@@ -9,7 +9,7 @@ from itertools import chain
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 from torch.utils.tensorboard import SummaryWriter
 
 from tqdm import tqdm
@@ -125,7 +125,6 @@ def train_diffusion(config,
                     regressor,
                     d3dp,
                     train_dataloader,
-                    val_dataloader,
                     writer,
                     device
                 ):
@@ -142,7 +141,6 @@ def train_diffusion(config,
         d3dp=d3dp,
         regressor=regressor,
         train_dataloader=train_dataloader,
-        val_dataloader=val_dataloader,
         optimizer=optimizer,
         epochs=config.training.diffusion.epochs,
         writer=writer,
@@ -290,6 +288,13 @@ def main():
                         shuffle=True
                     )
 
+    diffusion_dataset = ConcatDataset([train_dataset, val_dataset])
+    diffusion_dataloader = DataLoader(
+                            diffusion_dataset, 
+                            batch_size=config.training.batch_size, 
+                            shuffle=True
+                        )
+
     pose_estimator = MixSTE2(
         num_frame=config.model.n_frames, 
         num_joints=config.dataset.num_joints, 
@@ -350,8 +355,7 @@ def main():
             backbone=backbone,
             regressor=regressor,
             d3dp=d3dp,
-            train_dataloader=train_dataloader,
-            val_dataloader=val_dataloader,
+            train_dataloader=diffusion_dataloader,
             writer=writer,
             device=device,
         )
