@@ -9,17 +9,17 @@ from utils import mpjpe
 from .utils import transform_embedding
 
 def diffusion_loss(noise, predicted_noise, seq, predicted_joints):
-    loss = mpjpe(predicted_joints, seq)
-    loss += F.mse_loss(noise, predicted_noise)
-    loss += 1000 * F.mse_loss(seq[:, 0, :, :], predicted_joints[:, 0, :, :])
+    term1 = mpjpe(predicted_joints, seq)
+    term2 = F.mse_loss(noise, predicted_noise)
+    term3 = 1000 * F.mse_loss(seq[:, 0, :, :], predicted_joints[:, 0, :, :])
 
-    return loss
+    return term1 + term2 + 1000 * term3, term1, term2, term3
 
 def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
     backbone.train()
     d3dp.train()
 
-    total_loss = 0
+    total_loss, total_mjpe, total_noise_prediction, total_first_frame = [0] * 4
     for seq, mask in tqdm(dataloader):
         optimizer.zero_grad()
         
@@ -32,17 +32,28 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
         predicted_embeddings = embeddings - predicted_noise
         predicted_joints = regressor(predicted_embeddings)
 
-        loss = diffusion_loss(noise, predicted_noise, seq, predicted_joints)
+        loss, mjpe_val, noise_prediction_val, first_frame_val = diffusion_loss(noise, predicted_noise, seq, predicted_joints)
 
         loss.backward()
         optimizer.step()
 
         total_loss += loss.detach().cpu().numpy().item()
+        total_mjpe += mjpe_val.detach().cpu().numpy().item()
+        total_noise_prediction += noise_prediction_val.detach().cpu().numpy().item()
+        total_first_frame += first_frame_val.detach().cpu().numpy().item()
 
-    return {'loss': total_loss}
+    return {
+        'total_loss': total_loss,
+        'mpje': total_mjpe,
+        'noise_prediction': total_noise_prediction,
+        'first_frame': total_first_frame
+    }
 
 def update_log(writer, train_log, step):
-    writer.add_scalar(f'Diffusion/Loss/', train_log['loss'], step)
+    writer.add_scalar(f'Diffusion/Loss/', train_log['total_loss'], step)
+    writer.add_scalar(f'Diffusion/Loss/', train_log['mpje'], step)
+    writer.add_scalar(f'Diffusion/Loss/', train_log['noise_prediction'], step)
+    writer.add_scalar(f'Diffusion/Loss/', train_log['first_frame'], step)
 
 def train_diffusion_model(backbone, 
                           regressor,
