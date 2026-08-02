@@ -120,7 +120,10 @@ def train_LODO_classifier(
                                     shuffle=True,
                                     collate_fn=collate_fn)
 
-        loss_fn = CategoricalOrdinalFocalLoss()
+        if config.training.loss == 'ccf':
+            loss_fn = CategoricalOrdinalFocalLoss()
+        elif config.training.loss == 'ce':
+            loss_fn = nn.CrossEntropyLoss()
 
         val_log = train_classifier(
             backbone=backbone, 
