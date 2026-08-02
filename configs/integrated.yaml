@@ -76,6 +76,6 @@ training:
 
 checkpoints:
   backbone: assets/checkpoints/backbone_epoch_60.pth
-  regressor: assets/checkpoints/regressor_epoch_60.pth
+  regressor: v2/d3dp_epoch_20.pth
 
 save_path_root: 'v2'
