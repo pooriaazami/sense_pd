@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 from utils import get_config
 from models import MotionAGFormer, CBAMClassificationHead
 from data import CarePDDataset
-from utils import CategoricalOrdinalFocalLoss
+from utils import CategoricalOrdinalFocalLoss, OrdinalFocalLoss
 from train.cbam_classifier import train_model as train_classifier
 
 
@@ -124,6 +124,8 @@ def train_LODO_classifier(
             loss_fn = CategoricalOrdinalFocalLoss()
         elif config.training.loss == 'ce':
             loss_fn = nn.CrossEntropyLoss()
+        elif config.training.loss == 'of':
+            loss_fn = OrdinalFocalLoss()
 
         val_log = train_classifier(
             backbone=backbone, 

@@ -56,3 +56,60 @@ class CategoricalOrdinalFocalLoss(nn.Module):
         
         # Sum across classes, then mean across the batch
         return torch.mean(torch.sum(combined_loss, dim=1))
+
+class OrdinalFocalLoss(nn.Module):
+    """
+    Differentiable Ordinal Focal Loss.
+
+    L = Focal + beta * Ordinal
+
+    Focal:
+        -alpha * (1-pt)^gamma * log(pt)
+
+    Ordinal:
+        ((1 + |E[y]-y|) / C) * (-log(pt))
+
+    where
+        E[y] = sum_c c * p_c
+    """
+
+    def __init__(self, alpha=0.25, gamma=2.0, beta=0.2):
+        super().__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.beta = beta
+
+    def forward(self, logits, targets):
+
+        num_classes = logits.size(1)
+
+        probs = F.softmax(logits, dim=1)
+
+        pt = probs.gather(1, targets.unsqueeze(1)).squeeze(1)
+        pt = pt.clamp(1e-8, 1.0)
+
+        ce = -torch.log(pt)
+
+        # -------------------------
+        # Focal loss
+        # -------------------------
+        focal = self.alpha * (1.0 - pt).pow(self.gamma) * ce
+
+        # -------------------------
+        # Differentiable ordinal loss
+        # -------------------------
+        class_ids = torch.arange(
+            num_classes,
+            device=logits.device,
+            dtype=probs.dtype
+        )
+
+        expected_class = (probs * class_ids).sum(dim=1)
+
+        distance = torch.abs(expected_class - targets.float())
+
+        ordinal = ((1.0 + distance) / num_classes) * ce
+
+        loss = focal + self.beta * ordinal
+
+        return loss.mean()
