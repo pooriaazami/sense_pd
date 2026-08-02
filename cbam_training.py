@@ -96,7 +96,7 @@ def train_LODO_classifier(
         classifier = CBAMClassificationHead(
                 in_channels=config.model.dim_rep,
                 r=config.cbam.r,
-                conv_channels=config.classifer.conv_channels,
+                conv_channels=config.classifier.conv_channels,
                 num_joints=config.dataset.num_joints,
                 seq_length=config.model.n_frames,
                 num_classes=config.dataset.num_classes
