@@ -60,7 +60,7 @@ class CBAMClassificationHead(nn.Module):
                  num_classes):
         super().__init__()
 
-        self.cbam = CBAM(channels=in_channels, r=r)
+        self.cbam = CBAM(channels=seq_length, r=r)
         self.conv = nn.Conv2d(in_channels=in_channels, out_channels=conv_channels, kernel_size=1)
         self.head = nn.Linear(num_joints * seq_length * conv_channels, num_classes)
 
@@ -69,8 +69,8 @@ class CBAMClassificationHead(nn.Module):
 
         x = self.conv(x.permute(0, 3, 1, 2))
         x = x.permute(0, 2, 3, 1)
-
         x = x.flatten(1)
+
         x = self.head(x)
         
         return x
