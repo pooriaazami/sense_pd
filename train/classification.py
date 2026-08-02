@@ -11,8 +11,8 @@ from .utils import transform_embedding
 
 def train_epoch(dataloader, backbone, d3dp, classifier, loss_fn, optimizer, device):
     backbone.eval()
-    # allow d3dp to be fine-tuned during classifier training
-    d3dp.train()
+    # allow d3dp to be fine-tuned during classifier training, but use inference mode for outputs
+    d3dp.eval()
     classifier.train()
 
     total_loss = 0.

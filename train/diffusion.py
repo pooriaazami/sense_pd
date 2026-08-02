@@ -31,7 +31,7 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device, loss_w
     backbone.train()
     d3dp.train()
 
-    total_loss, total_mjpe, total_noise_prediction, total_first_frame = [0] * 4
+    total_loss = 0.
     for seq, mask in tqdm(dataloader):
         optimizer.zero_grad()
         
@@ -40,12 +40,9 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device, loss_w
 
         embeddings = backbone(seq)
         embeddings = transform_embedding(embeddings, mask)
-        noise, predicted_noise, predicted_embeddings = d3dp(embeddings)
-        predicted_joints = regressor(predicted_embeddings)
+        targets_norm, predicted_embeddings = d3dp(embeddings)
 
-        loss, mjpe_val, noise_prediction_val, first_frame_val = diffusion_loss(
-            noise, predicted_noise, seq, predicted_joints, weights=loss_weights
-        )
+        loss = F.mse_loss(predicted_embeddings, targets_norm)
 
         loss.backward()
         # Clip gradients on the diffusion model to stabilize training
@@ -56,22 +53,13 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device, loss_w
         optimizer.step()
 
         total_loss += loss.detach().cpu().numpy().item()
-        total_mjpe += mjpe_val.detach().cpu().numpy().item()
-        total_noise_prediction += noise_prediction_val.detach().cpu().numpy().item()
-        total_first_frame += first_frame_val.detach().cpu().numpy().item()
 
     return {
         'total_loss': total_loss,
-        'mpje': total_mjpe,
-        'noise_prediction': total_noise_prediction,
-        'first_frame': total_first_frame
     }
 
 def update_log(writer, train_log, step):
     writer.add_scalar(f'Diffusion/TotalLoss/', train_log['total_loss'], step)
-    writer.add_scalar(f'Diffusion/MPJE/', train_log['mpje'], step)
-    writer.add_scalar(f'Diffusion/NoisePrediction/', train_log['noise_prediction'], step)
-    writer.add_scalar(f'Diffusion/FirstFrame/', train_log['first_frame'], step)
 
 def train_diffusion_model(backbone, 
                           regressor,

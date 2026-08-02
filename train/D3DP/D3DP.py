@@ -52,7 +52,7 @@ class D3DP(nn.Module):
         self.sampling_timesteps = default(sampling_timesteps, timesteps)
         assert self.sampling_timesteps <= timesteps
         self.is_ddim_sampling = self.sampling_timesteps < timesteps
-        self.ddim_sampling_eta = 1.
+        self.ddim_sampling_eta = 0.
         self.self_condition = False
         self.scale = scale
         self.box_renewal = True
@@ -86,6 +86,8 @@ class D3DP(nn.Module):
         #self.head = DynamicHead(cfg=cfg, roi_input_shape=self.backbone.output_shape())
         
         self.condition_proj = nn.Linear(dim_rep, dim_rep)
+        self.concat_proj = nn.Linear(dim_rep * 2, dim_rep)
+        self.time_embed = nn.Embedding(self.num_timesteps, dim_rep)
         self.pose_estimator = pose_estimator
 
     def predict_start_from_noise(self, x_t, t, noise):
@@ -94,43 +96,67 @@ class D3DP(nn.Module):
                 extract(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape) * noise
         )
 
+    def predict_noise_from_start(self, x_t, t, x_start):
+        return (
+                x_t - extract(self.sqrt_alphas_cumprod, t, x_t.shape) * x_start
+        ) / extract(self.sqrt_one_minus_alphas_cumprod, t, x_t.shape)
+
+    def _build_condition(self, features, x_t, t):
+        B = features.shape[0]
+
+        x_cond = features[:, 0:1]
+        x_cond = self.condition_proj(
+            x_cond.reshape(B * self.num_joints, -1)
+        ).reshape(B, 1, self.num_joints, -1)
+        x_cond = x_cond / self.scale
+
+        x_t_norm = x_t / self.scale
+
+        time_emb = self.time_embed(t)
+        time_emb = time_emb[:, None, None, :]
+
+        x_t_time = x_t_norm + time_emb
+        x_cond_time = x_cond + time_emb
+        x_cond_time = x_cond_time.expand(B, self.frames, self.num_joints, -1)
+
+        concat = torch.cat([x_t_time, x_cond_time], dim=-1)
+        cond = self.concat_proj(concat.reshape(-1, concat.shape[-1]))
+        cond = cond.reshape(B, self.frames, self.num_joints, -1)
+
+        return cond
+
     def model_predictions(self, x, t, x_cond):
         x_t = torch.clamp(x, min=-1.1 * self.scale, max=1.1 * self.scale)
         x_t = x_t / self.scale
-        pred_noise = self.pose_estimator(x_t, t, x_cond)
 
-        x_start = self.predict_start_from_noise(x_t, t, pred_noise)
-        x_start = torch.clamp(x_start, min=-1.1, max=1.1)
+        pred_x_start = self.pose_estimator(x_t, t, x_cond)
+        pred_x_start = torch.clamp(pred_x_start, min=-1.1, max=1.1)
 
-        return ModelPrediction(pred_noise, x_start)
+        pred_noise = self.predict_noise_from_start(x_t, t, pred_x_start)
+        return ModelPrediction(pred_noise, pred_x_start)
 
-    @torch.no_grad()
-    def ddim_sample(self, inputs_3d, input_cond):
+    def ddim_sample(self, inputs_3d):
         batch = inputs_3d.shape[0]
-        shape = (batch, self.num_proposals, self.frames, 17, 512)
         total_timesteps, sampling_timesteps, eta = self.num_timesteps_eval, self.sampling_timesteps, self.ddim_sampling_eta
 
-        # [-1, 0, 1, 2, ..., T-1] when sampling_timesteps == total_timesteps
+        t_init = torch.full((batch,), self.num_timesteps - 1, device=inputs_3d.device, dtype=torch.long)
+        x_start = inputs_3d * self.scale
+        img = self.q_sample(x_start=x_start, t=t_init, noise=torch.randn_like(x_start))
+        img = torch.clamp(img, min=-1.1 * self.scale, max=1.1 * self.scale)
+
         times = torch.linspace(-1, total_timesteps - 1, steps=sampling_timesteps + 1)
         times = list(reversed(times.int().tolist()))
-        time_pairs = list(zip(times[:-1], times[1:]))  # [(T-1, T-2), (T-2, T-3), ..., (1, 0), (0, -1)]
+        time_pairs = list(zip(times[:-1], times[1:]))
 
-        img = torch.randn(shape, device=inputs_3d.device)
-
-        ensemble_score, ensemble_label, ensemble_coord = [], [], []
-        x_start = None
-        preds_all=[]
         for time, time_next in time_pairs:
-            
             time_cond = torch.full((batch,), time, device=inputs_3d.device, dtype=torch.long)
-            #self_cond = x_start if self.self_condition else None
-            preds = self.model_predictions(img, time_cond, input_cond)
-            pred_noise, x_start = preds.pred_noise, preds.pred_x_start
-            preds_all.append(x_start)
+            cond = self._build_condition(inputs_3d, img, time_cond)
+            preds = self.model_predictions(img, time_cond, cond)
+            pred_noise, pred_x_start = preds.pred_noise, preds.pred_x_start
 
             if time_next < 0:
-                img = x_start
-                continue
+                img = pred_x_start
+                break
 
             alpha = self.alphas_cumprod[time]
             alpha_next = self.alphas_cumprod[time_next]
@@ -140,7 +166,7 @@ class D3DP(nn.Module):
 
             noise = torch.randn_like(img)
 
-            img = x_start * alpha_next.sqrt() + \
+            img = pred_x_start * alpha_next.sqrt() + \
                   c * pred_noise + \
                   sigma * noise
 
@@ -155,6 +181,13 @@ class D3DP(nn.Module):
         sqrt_one_minus_alphas_cumprod_t = extract(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape)
 
         return sqrt_alphas_cumprod_t * x_start + sqrt_one_minus_alphas_cumprod_t * noise
+
+    def forward_diffusion(self, features):
+        targets_norm = features / self.scale
+        noisy_features, _, t = self.prepare_targets(features)
+        cond = self._build_condition(features, noisy_features, t)
+        preds = self.model_predictions(noisy_features, t, cond)
+        return targets_norm, preds.pred_x_start
 
     def train(self, mode: bool = True):
         super().train(mode)
@@ -171,43 +204,13 @@ class D3DP(nn.Module):
         return self
 
     def forward(self, features):
-        B = features.shape[0]
-
-        # Prepare condition: [B, F, J, C] -> first frame -> projection
-        x_cond = features[:, 0]
-        cond = self.condition_proj(
-            x_cond.reshape(B * self.num_joints, -1)
-        ).reshape(B, 1, self.num_joints, -1)
-
         if self.is_train:
-            # x_t (noisy), noise, timestep
-            noisy_features, noise, t = self.prepare_targets(features)
-            noisy_features = noisy_features.float()
-            t = t.squeeze(-1)
+            noisy_features, targets_norm, t = self.prepare_targets(features)
+            cond = self._build_condition(features, noisy_features, t)
+            preds = self.model_predictions(noisy_features, t, cond)
+            return targets_norm, preds.pred_x_start
 
-            # predict noise directly in normalized embedding space
-            predicted_noise = self.pose_estimator(
-                noisy_features,
-                t,
-                cond
-            )
-
-            predicted_x_start = self.predict_start_from_noise(
-                noisy_features,
-                t,
-                predicted_noise
-            )
-
-            return noise, predicted_noise, predicted_x_start
-
-        else:
-            predicted_features = self.ddim_sample(
-                features,
-                cond
-            )
-
-            # Return the original clean embeddings and the denoised predictions
-            return predicted_features
+        return self.ddim_sample(features)
 
     def prepare_targets(self, targets):
         B = targets.shape[0]
@@ -221,21 +224,15 @@ class D3DP(nn.Module):
             device=device
         ).long()
 
-        # Sample noise with same shape as input
-        noise = torch.randn_like(targets)
-        normalized_noise = noise / self.scale
-
-        # Scale clean data
         x_start = targets * self.scale
+        noise = torch.randn_like(x_start)
 
-        # Forward diffusion
         x = self.q_sample(
             x_start=x_start,
             t=t,
             noise=noise
         )
 
-        # Same normalization as original code
         x = torch.clamp(
             x,
             min=-1.1 * self.scale,
@@ -243,5 +240,6 @@ class D3DP(nn.Module):
         )
 
         x = x / self.scale
+        targets_norm = targets / self.scale
 
-        return x, normalized_noise, t
+        return x, targets_norm, t
