@@ -149,12 +149,22 @@ class  MixSTE2(nn.Module):
 
     def forward(self, x_3d, t, x_cond):
         x_cond = x_cond + self.Temporal_pos_embed[:,0:1,:].unsqueeze(dim=2)
+        squeeze_h = False
         if self.is_train:
-            b,f,n,c, = x_3d.shape
+            b,f,n,c = x_3d.shape
         else:
-            b, h, f, n, c = x_3d.shape
-            x_cond = x_cond.unsqueeze(dim=1)
-        
+            if x_3d.ndim == 5:
+                b, h, f, n, c = x_3d.shape
+                x_cond = x_cond.unsqueeze(dim=1)
+            elif x_3d.ndim == 4:
+                b,f,n,c = x_3d.shape
+                x_3d = x_3d.unsqueeze(dim=1)
+                x_cond = x_cond.unsqueeze(dim=1)
+                h = 1
+                squeeze_h = True
+            else:
+                raise ValueError(f"Unexpected x_3d ndim={x_3d.ndim} in eval mode")
+
         x = x_3d + x_cond
         x = self.STE_forward(x, t)
 
@@ -169,5 +179,7 @@ class  MixSTE2(nn.Module):
             x = x.view(b, f, n, -1)
         else:
             x = x.view(b, h, f, n, -1)
+            if squeeze_h:
+                x = x.squeeze(1)
 
         return x
