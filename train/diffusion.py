@@ -21,9 +21,9 @@ def diffusion_loss(noise, predicted_noise, seq, predicted_joints, weights=None):
     term_noise = F.l1_loss(noise, predicted_noise)
     term_first = F.l1_loss(seq[:, 0, :, :], predicted_joints[:, 0, :, :])
 
-    total = weights.get('recon', 1.0) * term_recon + \
+    total = weights.get('recon', .1) * term_recon + \
             weights.get('noise', 1.0) * term_noise + \
-            weights.get('first_frame', 1.0) * term_first
+            weights.get('first_frame', .1) * term_first
 
     return total, term_recon, term_noise, term_first
 
