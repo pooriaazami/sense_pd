@@ -8,14 +8,26 @@ from tqdm import tqdm
 from utils import mpjpe
 from .utils import transform_embedding
 
-def diffusion_loss(noise, predicted_noise, seq, predicted_joints):
-    term1 = mpjpe(predicted_joints, seq)
-    term2 = F.l1_loss(noise, predicted_noise)
-    term3 = F.l1_loss(seq[:, 0, :, :], predicted_joints[:, 0, :, :])
+def diffusion_loss(noise, predicted_noise, seq, predicted_joints, weights=None):
+    """Compute diffusion loss with configurable term weights.
 
-    return term1 + term2 + term3, term1, term2, term3
+    weights: dict-like with keys 'recon', 'noise', 'first_frame'.
+    Returns: (total, recon, noise_term, first_frame_term)
+    """
+    if weights is None:
+        weights = {'recon': 1.0, 'noise': 1.0, 'first_frame': 1.0}
 
-def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
+    term_recon = mpjpe(predicted_joints, seq)
+    term_noise = F.mse_loss(noise, predicted_noise)
+    term_first = F.l1_loss(seq[:, 0, :, :], predicted_joints[:, 0, :, :])
+
+    total = weights.get('recon', 1.0) * term_recon + \
+            weights.get('noise', 1.0) * term_noise + \
+            weights.get('first_frame', 1.0) * term_first
+
+    return total, term_recon, term_noise, term_first
+
+def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device, loss_weights=None):
     backbone.train()
     d3dp.train()
 
@@ -31,9 +43,16 @@ def train_epoch(backbone, regressor, d3dp, dataloader, optimizer, device):
         noise, predicted_noise, predicted_embeddings = d3dp(embeddings)
         predicted_joints = regressor(predicted_embeddings)
 
-        loss, mjpe_val, noise_prediction_val, first_frame_val = diffusion_loss(noise, predicted_noise, seq, predicted_joints)
+        loss, mjpe_val, noise_prediction_val, first_frame_val = diffusion_loss(
+            noise, predicted_noise, seq, predicted_joints, weights=loss_weights
+        )
 
         loss.backward()
+        # Clip gradients on the diffusion model to stabilize training
+        try:
+            torch.nn.utils.clip_grad_norm_(d3dp.parameters(), max_norm=1.0)
+        except Exception:
+            pass
         optimizer.step()
 
         total_loss += loss.detach().cpu().numpy().item()
@@ -63,10 +82,13 @@ def train_diffusion_model(backbone,
                           device, 
                           writer,
                           save_freq,
-                          save_path_root):
+                          save_path_root,
+                          loss_weights=None):
     
     for epoch in range(1, epochs+1):
-        train_log = train_epoch(backbone, regressor, d3dp, train_dataloader, optimizer, device)
+        train_log = train_epoch(
+            backbone, regressor, d3dp, train_dataloader, optimizer, device, loss_weights=loss_weights
+        )
 
         update_log(writer, train_log, epoch)
 

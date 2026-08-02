@@ -131,11 +131,17 @@ def train_diffusion(config,
     
     freeze_model(backbone)
     freeze_model(regressor)
+    # Allow separate LR for D3DP if provided, otherwise use main diffusion lr
+    lr_d3dp = config.training.diffusion.lr_d3dp if hasattr(config.training.diffusion, 'lr_d3dp') else config.training.diffusion.lr
 
-    optimizer = optim.AdamW(d3dp.parameters(), 
-                            lr=config.training.diffusion.lr, 
-                            weight_decay=config.training.diffusion.weight_decay
-                        )
+    optimizer = optim.AdamW(
+        d3dp.parameters(),
+        lr=lr_d3dp,
+        weight_decay=config.training.diffusion.weight_decay
+    )
+
+    # Pass optional loss weights from config.training.diffusion.loss_weights (dict)
+    loss_weights = config.training.diffusion.loss_weights if hasattr(config.training.diffusion, 'loss_weights') else None
 
     train_diffusion_model(
         backbone=backbone,
@@ -147,7 +153,8 @@ def train_diffusion(config,
         writer=writer,
         device=device,
         save_freq=config.training.diffusion.save_freq,
-        save_path_root=config.save_path_root
+        save_path_root=config.save_path_root,
+        loss_weights=loss_weights
     )
 
 def convert_params(params):
@@ -182,8 +189,8 @@ def train_LODO_classifier(
                     device
                 ):
 
+    # Freeze only the backbone so the diffusion module can be fine-tuned by the classifier
     freeze_model(backbone)
-    freeze_model(d3dp)
 
     logs = {}
     for val_dataset_name in DATASETS:
@@ -198,8 +205,14 @@ def train_LODO_classifier(
             dropout_rate=config.classifier.dropout_rate,
         ).to(device)
 
-        optimizer = optim.AdamW(classifier.parameters(), 
-                                lr=config.training.classification.lr)
+        # Allow fine-tuning d3dp with a smaller LR when training classifier
+        lr_clf = config.training.classification.lr
+        lr_d3dp_ft = config.training.classification.lr_d3dp if hasattr(config.training.classification, 'lr_d3dp') else lr_clf * 0.1
+
+        optimizer = optim.AdamW([
+            {'params': classifier.parameters(), 'lr': lr_clf},
+            {'params': d3dp.parameters(), 'lr': lr_d3dp_ft}
+        ])
 
         train_datasets = DATASETS.copy()
         train_datasets.remove(val_dataset_name)

@@ -11,7 +11,8 @@ from .utils import transform_embedding
 
 def train_epoch(dataloader, backbone, d3dp, classifier, loss_fn, optimizer, device):
     backbone.eval()
-    d3dp.eval()
+    # allow d3dp to be fine-tuned during classifier training
+    d3dp.train()
     classifier.train()
 
     total_loss = 0.
@@ -25,10 +26,13 @@ def train_epoch(dataloader, backbone, d3dp, classifier, loss_fn, optimizer, devi
         mask = data['mask'].to(device)
         label = data['label'].to(device).squeeze()
 
+        # backbone is frozen and run without grad to save memory
         with torch.no_grad():
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
-            diffision_outputs = d3dp(embeddings).squeeze(1)
+
+        # run diffusion model with grad so it can be fine-tuned by classifier loss
+        diffision_outputs = d3dp(embeddings).squeeze(1)
 
         preds = classifier(embeddings, diffision_outputs)
         loss = loss_fn(preds, label)
