@@ -34,6 +34,8 @@ classifier:
   conv_channels: 8
   
 training:
+  batch_size: 8
+  
   classification:
     lr: 0.0004
     optimizer: adamw

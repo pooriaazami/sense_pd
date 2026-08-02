@@ -112,7 +112,7 @@ def train_LODO_classifier(
         val_dataset = CarePDDataset(config.dataset.classification, [val_dataset_name])
 
         train_dataloader = DataLoader(train_dataset, 
-                                    batch_size=config.training.batch_size, 
+                                    batch_size=config.classification.batch_size, 
                                     shuffle=True,
                                     collate_fn=collate_fn)
         val_dataloader = DataLoader(val_dataset, 
