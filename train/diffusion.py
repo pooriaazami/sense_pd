@@ -18,7 +18,7 @@ def diffusion_loss(noise, predicted_noise, seq, predicted_joints, weights=None):
         weights = {'recon': 1.0, 'noise': 1.0, 'first_frame': 1.0}
 
     term_recon = mpjpe(predicted_joints, seq)
-    term_noise = F.mse_loss(noise, predicted_noise)
+    term_noise = F.l1_loss(noise, predicted_noise)
     term_first = F.l1_loss(seq[:, 0, :, :], predicted_joints[:, 0, :, :])
 
     total = weights.get('recon', 1.0) * term_recon + \

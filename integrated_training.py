@@ -132,11 +132,10 @@ def train_diffusion(config,
     freeze_model(backbone)
     freeze_model(regressor)
     # Allow separate LR for D3DP if provided, otherwise use main diffusion lr
-    lr_d3dp = config.training.diffusion.lr_d3dp if hasattr(config.training.diffusion, 'lr_d3dp') else config.training.diffusion.lr
 
     optimizer = optim.AdamW(
         d3dp.parameters(),
-        lr=lr_d3dp,
+        lr=config.training.diffusion.lr,
         weight_decay=config.training.diffusion.weight_decay
     )
 
