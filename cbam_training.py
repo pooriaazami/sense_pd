@@ -94,7 +94,7 @@ def train_LODO_classifier(
     for val_dataset_name in DATASETS:
         print(f'Val Dataset: {val_dataset_name}')
         classifier = CBAMClassificationHead(
-                in_channels=config.model.dim_rep,
+                in_channels=config.model.n_frames,
                 r=config.cbam.r,
                 conv_channels=config.classifier.conv_channels,
                 num_joints=config.dataset.num_joints,
