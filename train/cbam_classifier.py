@@ -90,8 +90,6 @@ def validation_epoch(backbone,
             preds = classifier(embeddings)
             loss = loss_fn(preds, label)
 
-            loss.backward()
-
             total_loss += loss.detach().cpu().numpy().item()
             preds_log.extend(preds.argmax(1).detach().cpu().tolist())
             labels_log.extend(label.cpu().tolist())
