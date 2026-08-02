@@ -128,7 +128,7 @@ def log_to_tensorboard(writer, step, log, dataset, label):
 
     plt.close(log['confusion_matrix'].figure_)
 
-def train_model(train_dataloader, 
+def train_diffusion_based_model(train_dataloader, 
                 val_dataloader, 
                 backbone, 
                 d3dp,

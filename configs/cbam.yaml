@@ -1,0 +1,44 @@
+model: 
+  n_layers: 16
+  dim_in: 3 
+  dim_feat: 128
+  dim_rep: 512
+  dim_out: 3
+  mlp_ratio: 4
+  act_layer: gelu
+  attn_drop: 0.1
+  drop: 0.1
+  drop_path: 0.1
+  use_layer_scale: True
+  layer_scale_init_value: 0.00001
+  use_adaptive_fusion: True
+  num_heads: 8
+  qkv_bias: False
+  qkv_scale: null
+  hierarchical: False
+  use_temporal_similarity: True # Only useful when use_tcn = False
+  neighbour_num: 2  # Only useful when use_temporal_similarity = True
+  temporal_connection_len: 1 # Only useful when use_tcn = False, use_temporal_similarity = False
+  use_tcn: False
+  graph_only: False
+  n_frames: 81
+
+cbam:
+  r: 8
+
+classifier:
+  conv_channels: 8
+  
+training:
+  classification:
+    lr: 0.0004
+    optimizer: adamw
+    epochs: 10
+
+dataset:
+  classification: datasets/CARE-PD/preprocessed/
+  num_joints: 17
+  num_classes: 4
+
+checkpoints:
+  backbone: assets/checkpoints/backbone_epoch_60.pth

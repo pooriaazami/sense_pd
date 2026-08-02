@@ -22,7 +22,7 @@ from utils import motion_loss_fn, joints_loss_fn, CategoricalOrdinalFocalLoss
 
 from train.pretrain import pretrain
 from train.diffusion import train_diffusion_model
-from train.classification import train_model as train_classifier
+from train.diffusion_classification import train_diffusion_based_model as train_classifier
 
 NUM_CLASSES = 4
 DATASETS = ['3DGait', 'BMCLab', 'PD-GaM', 'T-SDU-PD']
