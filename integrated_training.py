@@ -131,7 +131,7 @@ def train_diffusion(config,
     
     freeze_model(backbone)
     freeze_model(regressor)
-    # Allow separate LR for D3DP if provided, otherwise use main diffusion lr
+    freeze_model(d3dp)
 
     optimizer = optim.AdamW(
         d3dp.parameters(),
