@@ -28,7 +28,7 @@ model:
   n_frames: 81
 
 cbam:
-  r: 8
+  r: 4
 
 classifier:
   conv_channels: 8
@@ -51,6 +51,6 @@ dataset:
   num_classes: 4
 
 checkpoints:
-  backbone: assets/checkpoints/backbone_epoch_40.pth
+  backbone: assets/checkpoints/backbone_epoch_60.pth
 
 save_path_root: 'v2'
