@@ -103,7 +103,8 @@ def train_LODO_classifier(
             ).to(device)
         
         optimizer = optim.AdamW(classifier.parameters(), 
-                                lr=config.training.classification.lr)
+                                lr=config.training.classification.lr,
+                                weight_decay=config.training.weight_decay)
 
         train_datasets = DATASETS.copy()
         train_datasets.remove(val_dataset_name)

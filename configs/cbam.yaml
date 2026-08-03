@@ -38,7 +38,8 @@ training:
   loss: of
 
   classification:
-    lr: 0.0008
+    lr: 0.0004
+    weight_decay: 0.1
     optimizer: adamw
     epochs: 10
 
