@@ -115,12 +115,14 @@ def train_LODO_classifier(
         
             optimizer = optim.AdamW([{
                 'params': classifier.parameters(),
-                'lr': config.training.classification.lr
+                'lr': config.training.classification.lr,
+                'weight_decay': 0.1
             }, {
                 'params': backbone.parameters(),
-                'lr': config.training.classification.lr * config.training.classification.backbone_lr_factor
+                'lr': config.training.classification.lr * config.training.classification.backbone_lr_factor,
+                'weight_decay': config.training.classification.weight_decay
             }],
-                weight_decay=config.training.classification.weight_decay)
+                )
         else:
             optimizer = optim.AdamW(classifier.parameters(), 
                                     lr=config.training.classification.lr,
