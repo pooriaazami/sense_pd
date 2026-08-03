@@ -88,7 +88,8 @@ def train_LODO_classifier(
                     device
                 ):
 
-    freeze_model(backbone)
+    if config.training.classification.freeze_backend:
+        freeze_model(backbone)
 
     logs = {}
     for val_dataset_name in DATASETS:
@@ -101,10 +102,28 @@ def train_LODO_classifier(
                 seq_length=config.model.n_frames,
                 num_classes=config.dataset.num_classes
             ).to(device)
+
+        if not config.training.classification.freeze_backend:
+            backbone = MotionAGFormer(**config.model).to(device)
+
+            if hasattr(config, 'checkpoints'):
+                if hasattr(config.checkpoints, 'backbone'):
+                    print('Loading pretrained backbone')
+                    backbone.load_state_dict(torch.load(config.checkpoints.backbone))
+
         
-        optimizer = optim.AdamW(classifier.parameters(), 
-                                lr=config.training.classification.lr,
-                                weight_decay=config.training.classification.weight_decay)
+            optimizer = optim.AdamW([{
+                'params': classifier.parameters(),
+                'lr': config.training.classification.lr
+            }, {
+                'params': backbone.parameters(),
+                'lr': config.training.classification.lr * config.training.classification.backbone_lr_factor
+            }]
+                                    weight_decay=config.training.classification.weight_decay)
+        else:
+            optimizer = optim.AdamW(classifier.parameters(), 
+                                    lr=config.training.classification.lr,
+                                    weight_decay=config.training.classification.weight_decay)
 
         train_datasets = DATASETS.copy()
         train_datasets.remove(val_dataset_name)
