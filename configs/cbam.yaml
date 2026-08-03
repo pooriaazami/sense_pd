@@ -34,7 +34,7 @@ classifier:
   conv_channels: 8
   
 training:
-  batch_size: 16
+  batch_size: 64
   loss: of
 
   classification:
@@ -42,7 +42,7 @@ training:
     weight_decay: 0.01
     optimizer: adamw
     epochs: 10
-    freeze_backend: false
+    freeze_backend: true
     backbone_lr_factor: 0.1
 
 dataset:
@@ -51,6 +51,6 @@ dataset:
   num_classes: 4
 
 checkpoints:
-  backbone: assets/checkpoints/backbone_epoch_60.pth
+  backbone: assets/checkpoints/backbone_epoch_40.pth
 
 save_path_root: 'v2'
