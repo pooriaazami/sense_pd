@@ -42,7 +42,7 @@ def parse_args():
 
 def initiate_writer(config):
     dt = datetime.now()
-    name = f'{config.experiment_name}__{dt.month}_{dt.day}_{dt.hour}_{dt.minute}'
+    name = f'{config.experiment_name}__lr__{dt.month}_{dt.day}_{dt.hour}_{dt.minute}'
 
     writer = SummaryWriter(os.path.join('assets', 'logs', name))
 
@@ -116,17 +116,17 @@ def draw_lr_plots(
     
         optimizer = optim.AdamW([{
             'params': classifier.parameters(),
-            'lr': config.training.classification.lr,
+            'lr': 1e-8,
             'weight_decay': 0.1
         }, {
             'params': backbone.parameters(),
-            'lr': config.training.classification.lr * config.training.classification.backbone_lr_factor,
+            'lr': 1e-8 * config.training.classification.backbone_lr_factor,
             'weight_decay': config.training.classification.weight_decay
         }],
             )
     else:
         optimizer = optim.AdamW(classifier.parameters(), 
-                                lr=config.training.classification.lr,
+                                lr=1e-8,
                                 weight_decay=config.training.classification.weight_decay)
 
     scheduler = LambdaLR(
@@ -147,7 +147,6 @@ def draw_lr_plots(
     elif config.training.loss == 'of':
         loss_fn = OrdinalFocalLoss()
 
-    global_step = 0
     for epoch in range(NUM_EPOCHS):
         total_loss = 0
         for data in tqdm(dataloader):
