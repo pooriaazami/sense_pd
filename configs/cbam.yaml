@@ -28,7 +28,7 @@ model:
   n_frames: 81
 
 cbam:
-  r: 4
+  r: 8
 
 classifier:
   conv_channels: 8
