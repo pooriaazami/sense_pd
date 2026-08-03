@@ -158,7 +158,8 @@ def train_LODO_classifier(
             log_writer=writer,
             epochs=config.training.classification.epochs,
             device=device,
-            dataset_name=val_dataset_name
+            dataset_name=val_dataset_name,
+            freeze_backbone=config.training.classification.freeze_backend
         )
 
         logs[val_dataset_name] = val_log

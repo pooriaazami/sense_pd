@@ -15,8 +15,13 @@ def train_epoch(backbone,
                 dataloader, 
                 loss_fn,
                 device,
+                freeze_backbone
             ):
-    backbone.eval()
+
+    if freeze_backbone:
+        backbone.eval()
+    else:
+        backbone.train()
     classifier.train()
 
     total_loss = 0.
@@ -30,7 +35,11 @@ def train_epoch(backbone,
         mask = data['mask'].to(device)
         label = data['label'].to(device).squeeze()
 
-        with torch.no_grad():
+        if freeze_backbone:
+            with torch.no_grad():
+                embeddings = backbone(seq)
+                embeddings = transform_embedding(embeddings, mask)
+        else:
             embeddings = backbone(seq)
             embeddings = transform_embedding(embeddings, mask)
 
@@ -139,7 +148,8 @@ def train_model(backbone,
                 log_writer,
                 epochs,
                 device,
-                dataset_name
+                dataset_name,
+                freeze_backbone
             ):
 
     best_val_log, best_f1 = None, -1
@@ -150,7 +160,8 @@ def train_model(backbone,
                 optimizer=optimizer, 
                 dataloader=train_dataloader, 
                 loss_fn=loss_fn,
-                device=device) 
+                device=device,
+                freeze_backbone=freeze_backbone) 
         log_to_tensorboard(log_writer, epoch, train_log, dataset_name,'train')
 
         val_log = validation_epoch(
