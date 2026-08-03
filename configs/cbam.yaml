@@ -34,7 +34,7 @@ classifier:
   conv_channels: 8
   
 training:
-  batch_size: 64
+  batch_size: 32
   loss: of
 
   classification:
