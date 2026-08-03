@@ -141,6 +141,8 @@ def train_model(backbone,
                 device,
                 dataset_name
             ):
+
+    best_val_log, best_f1 = None, -1
     for epoch in range(1, epochs + 1):
         train_log = train_epoch(
                 backbone=backbone, 
@@ -158,5 +160,9 @@ def train_model(backbone,
             loss_fn=loss_fn,
             device=device)
         log_to_tensorboard(log_writer, epoch, val_log, dataset_name, 'val')
-    
-    return val_log
+
+        if val_log['f1'] > best_f1:
+            best_f1 = val_log['f1']
+            best_val_log = val_log
+            
+    return best_val_log
