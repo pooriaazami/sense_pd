@@ -89,6 +89,7 @@ def train_LODO_classifier(
                 ):
 
     if config.training.classification.freeze_backend:
+        print('Freezing the backbone')
         freeze_model(backbone)
 
     logs = {}
