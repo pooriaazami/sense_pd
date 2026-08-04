@@ -35,7 +35,7 @@ classifier:
   
 training:
   batch_size: 64
-  loss: wof
+  loss: of
   weights: [1, 1, 1, 5]
   class_weight_beta: 0.99
 
@@ -43,7 +43,7 @@ training:
     lr: 0.0004
     weight_decay: 0.01
     optimizer: adamw
-    epochs: 10
+    epochs: 40
     freeze_backend: true
     backbone_lr_factor: 0.1
 
