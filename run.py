@@ -131,6 +131,9 @@ def get_model():
             num_classes=config.dataset.num_classes
         ).to(device)
 
+    backbone.load_state_dict(torch.load(os.path.join('assets', 'backbone_epoch_60.pth')))
+    classifier.load_state_dict(torch.load(os.path.join('assets', 'best_cbam_classifier_epoch_4.pth')))
+
     return backbone, classifier
 
 def predict(data: Mapping[str, Mapping[str, Mapping[str, Any]]]) -> dict[str, dict[str, int]]:
