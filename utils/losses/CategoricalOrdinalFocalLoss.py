@@ -113,3 +113,79 @@ class OrdinalFocalLoss(nn.Module):
         loss = focal + self.beta * ordinal
 
         return loss.mean()
+
+class WeightedOrdinalFocalLoss(nn.Module):
+    """
+    Differentiable Ordinal Focal Loss with class weighting.
+
+    L = Focal + beta * Ordinal
+
+    Focal:
+        alpha * (1-pt)^gamma * w_y * (-log(pt))
+
+    Ordinal:
+        ((1 + |E[y]-y|) / C) * w_y * (-log(pt))
+    """
+
+    def __init__(
+        self,
+        alpha=0.25,
+        gamma=2.0,
+        beta=0.2,
+        class_weights=None,
+    ):
+        super().__init__()
+
+        self.alpha = alpha
+        self.gamma = gamma
+        self.beta = beta
+
+        if class_weights is not None:
+            self.register_buffer(
+                "class_weights",
+                torch.tensor(class_weights, dtype=torch.float)
+            )
+        else:
+            self.class_weights = None
+
+    def forward(self, logits, targets):
+
+        num_classes = logits.size(1)
+
+        probs = F.softmax(logits, dim=1)
+
+        pt = probs.gather(1, targets.unsqueeze(1)).squeeze(1)
+        pt = pt.clamp(min=1e-8)
+
+        ce = -torch.log(pt)
+
+        # -------------------------
+        # Apply class weights
+        # -------------------------
+        if self.class_weights is not None:
+            weights = self.class_weights[targets]
+            ce = ce * weights
+
+        # -------------------------
+        # Focal loss
+        # -------------------------
+        focal = self.alpha * (1.0 - pt).pow(self.gamma) * ce
+
+        # -------------------------
+        # Differentiable ordinal loss
+        # -------------------------
+        class_ids = torch.arange(
+            num_classes,
+            device=logits.device,
+            dtype=probs.dtype,
+        )
+
+        expected_class = (probs * class_ids).sum(dim=1)
+
+        distance = torch.abs(expected_class - targets.float())
+
+        ordinal = ((1.0 + distance) / num_classes) * ce
+
+        loss = focal + self.beta * ordinal
+
+        return loss.mean()

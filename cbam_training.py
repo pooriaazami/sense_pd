@@ -8,10 +8,12 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
+import numpy as np
+
 from utils import get_config
 from models import MotionAGFormer, CBAMClassificationHead
 from data import CarePDDataset
-from utils import CategoricalOrdinalFocalLoss, OrdinalFocalLoss
+from utils import CategoricalOrdinalFocalLoss, OrdinalFocalLoss, WeightedOrdinalFocalLoss
 from train.cbam_classifier import train_model as train_classifier
 
 
@@ -81,6 +83,9 @@ def collate_fn(batch):
         'mask': torch.stack([item['mask'].detach() for item in batch])
     }
 
+def calculate_loss_weights(weights, beta):
+    return (1 - beta) / (1 - beta ** weights)
+
 def train_LODO_classifier(
                     config,
                     backbone, 
@@ -149,6 +154,13 @@ def train_LODO_classifier(
             loss_fn = nn.CrossEntropyLoss()
         elif config.training.loss == 'of':
             loss_fn = OrdinalFocalLoss()
+        elif config.training.loss == 'wof':
+            class_weghts = np.array(config.training.weights)
+            class_weghts = calculate_loss_weights(class_weghts, config.training.class_weight_beta)
+
+            loss_fn = WeightedOrdinalFocalLoss(
+                class_weights=class_weghts
+            )
 
         val_log = train_classifier(
             backbone=backbone, 
