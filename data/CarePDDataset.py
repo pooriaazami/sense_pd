@@ -7,13 +7,16 @@ from torch.utils.data import Dataset
 import pandas as pd
 
 class CarePDDataset(Dataset):
-    def __init__(self, root, datasets=None):
+    def __init__(self, root, datasets=None, selector=None, split=None):
         files = glob.glob(os.path.join(root, '*.pkl'))
 
         if datasets:
             files = list(filter(lambda x: x.replace(root, '').replace('/', '').split('_')[0] in datasets, files))
 
-        self.files = files
+        if selector:
+            self.files = selector(files, split)
+        else:
+            self.files = files
 
     def __len__(self):
         return len(self.files)

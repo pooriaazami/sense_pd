@@ -1,3 +1,5 @@
+import os
+
 import torch
 
 import matplotlib.pyplot as plt
@@ -149,7 +151,9 @@ def train_model(backbone,
                 epochs,
                 device,
                 dataset_name,
-                freeze_backbone
+                freeze_backbone,
+                save_best=False,
+                save_path=None
             ):
 
     best_val_log, best_f1 = None, -1
@@ -175,5 +179,8 @@ def train_model(backbone,
         if val_log['f1'] > best_f1:
             best_f1 = val_log['f1']
             best_val_log = val_log
+
+            if save_best:
+                torch.save(classifier.state_dict(), os.path.join(save_path, 'best_cbam_classifier.pth'))
             
     return best_val_log
