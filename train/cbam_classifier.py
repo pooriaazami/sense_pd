@@ -181,6 +181,7 @@ def train_model(backbone,
             best_val_log = val_log
 
             if save_best:
-                torch.save(classifier.state_dict(), os.path.join(save_path, 'best_cbam_classifier.pth'))
+                torch.save(classifier.state_dict(), 
+                           os.path.join(save_path, f'best_cbam_classifier_epoch_{epoch}.pth'))
             
     return best_val_log
