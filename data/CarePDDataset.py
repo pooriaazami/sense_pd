@@ -14,7 +14,7 @@ class CarePDDataset(Dataset):
             files = list(filter(lambda x: x.replace(root, '').replace('/', '').split('_')[0] in datasets, files))
 
         if selector:
-            self.files = selector(files, split)
+            self.files = selector(files, split=split)
         else:
             self.files = files
 
