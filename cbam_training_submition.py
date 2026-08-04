@@ -191,7 +191,7 @@ def train_vanilla_classifier(
         dataset_name='combined',
         freeze_backbone=config.training.classification.freeze_backend,
         save_best=True,
-        save_path=config.save_path
+        save_path=config.save_path_root
     )
 
 def log_final_report(logs, writer):

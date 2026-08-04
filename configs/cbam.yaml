@@ -55,4 +55,4 @@ dataset:
 checkpoints:
   backbone: assets/checkpoints/backbone_epoch_60.pth
 
-save_path_root: 'v2'
+save_path_root: 'submittion'
