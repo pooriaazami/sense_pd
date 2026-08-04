@@ -155,6 +155,7 @@ def train_vanilla_classifier(
                                  selector=splitter,
                                  split='val')
 
+    print(f'Using {len(train_dataset)} samples for training and {len(val_dataset)} samples for validation')
     train_dataloader = DataLoader(train_dataset, 
                                 batch_size=config.training.batch_size, 
                                 shuffle=True,
