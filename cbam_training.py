@@ -160,7 +160,7 @@ def train_LODO_classifier(
 
             loss_fn = WeightedOrdinalFocalLoss(
                 class_weights=class_weghts
-            )
+            ).to(device)
 
         val_log = train_classifier(
             backbone=backbone, 
