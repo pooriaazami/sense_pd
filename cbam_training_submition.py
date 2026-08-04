@@ -11,6 +11,9 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
 
 from utils import get_config
 from models import MotionAGFormer, CBAMClassificationHead
@@ -21,19 +24,31 @@ from train.cbam_classifier import train_model as train_classifier
 
 NUM_CLASSES = 4
 DATASETS = ['3DGait', 'BMCLab', 'PD-GaM', 'T-SDU-PD']
-TEST_SIZE = .2
+TEST_SIZE = .1
 
 def train_test_splitter(files, test_size, split):
-    if not hasattr(train_test_splitter, 'files'):
-        random.shuffle(files)
+    if not hasattr(train_test_splitter, 'df'):
+        df = []
+        for path in files:
+            file = pd.read_pickle(path)
+            label = torch.tensor([file['label']])
+            df.append({
+                'path': path,
+                'label': label
+            })
 
-        train_test_splitter.files = files
-        train_test_splitter.num_training_files = int(len(files) * (1 - test_size))
+        df = pd.DataFrame.from_dict(df)
+        train, val = train_test_split(df, stratify=df['label'], test_size=test_size)
+
+        train_test_splitter.train = train
+        train_test_splitter.val = val
 
     if split == 'train':
-        return train_test_splitter.files[:train_test_splitter.num_training_files]
-    elif split == 'val':
-         return train_test_splitter.files[train_test_splitter.num_training_files:]   
+        return train_test_splitter.train['path'].to_list()
+    if split == 'val':
+        return train_test_splitter.val['path'].to_list()
+
+        
 
 def parse_args():
     parser = argparse.ArgumentParser(description='This module trains the classifier model.')
