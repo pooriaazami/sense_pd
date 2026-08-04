@@ -31,14 +31,14 @@ cbam:
   r: 8
 
 classifier:
-  conv_channels: 8
+  conv_channels: 4
   
 training:
   batch_size: 64
   loss: of
 
   classification:
-    lr: 0.0002
+    lr: 0.0004
     weight_decay: 0.01
     optimizer: adamw
     epochs: 10
