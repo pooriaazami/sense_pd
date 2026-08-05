@@ -167,7 +167,7 @@ def predict(data: Mapping[str, Mapping[str, Mapping[str, Any]]]) -> dict[str, di
 
             pred = Counter(preds).most_common()[0][0]
             
-            predictions[subject_key][str(walk_id)] = pred
+            predictions[subject_key][str(walk_id)] = int(pred)
 
     return predictions
 
