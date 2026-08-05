@@ -43,7 +43,7 @@ training:
     lr: 0.0004
     weight_decay: 0.01
     optimizer: adamw
-    epochs: 40
+    epochs: 10
     freeze_backend: true
     backbone_lr_factor: 0.1
 
